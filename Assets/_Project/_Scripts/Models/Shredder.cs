@@ -1,31 +1,47 @@
-﻿using System;
-using Helpers;
+﻿using Helpers;
 using UnityEngine;
 
 namespace Models {
-    [Serializable]
     public class Shredder {
+
         public UpgradeData FuelData;
         public UpgradeData PowerData;
         public UpgradeData AccelerationData;
 
-        private bool ProcessUpgrade(UpgradeData data, float powerStep) {
+        private void ProcessUpgrade(UpgradeData data, float powerStep) {
+            data.Power += powerStep;
             data.Level.Set(data.Level.Value() + 1);
-            data.Power.Set(data.Power.Value() + powerStep);
-            data.Price.Set(Mathf.RoundToInt(data.Price.Value() * Constants.PriceMultiplier));
-                
-            return true;
+            data.InvestedStep.Set(0);
         }
 
-        public bool TryUpgradeFuel() => ProcessUpgrade(FuelData, 20f);
-        public bool TryUpgradePower() => ProcessUpgrade(PowerData, 0.5f);
-        public bool TryUpgradeSpeed() => ProcessUpgrade(AccelerationData, 5f);
+        public void UpgradeFuel() {
+            FuelData.InvestedStep.Set(Mathf.Clamp(FuelData.InvestedStep.Value() + 1, 0, Constants.StepsToNewLevel));
+            if (FuelData.InvestedStep.Value() < Constants.StepsToNewLevel) 
+                return;
+
+            ProcessUpgrade(FuelData, Constants.FuelUpgradeStep);
+        }
+
+        public void UpgradePower() {
+            PowerData.InvestedStep.Set(Mathf.Clamp(PowerData.InvestedStep.Value() + 1, 0, Constants.StepsToNewLevel));
+            if (PowerData.InvestedStep.Value() < Constants.StepsToNewLevel) 
+                return;
+
+            ProcessUpgrade(PowerData, Constants.PowerUpgradeStep);
+        }
+
+        public void UpgradeAcceleration() {
+            AccelerationData.InvestedStep.Set(Mathf.Clamp(AccelerationData.InvestedStep.Value() + 1, 0, Constants.StepsToNewLevel));
+            if (AccelerationData.InvestedStep.Value() < Constants.StepsToNewLevel) 
+                return;
+
+            ProcessUpgrade(AccelerationData, Constants.AccelerationUpgradeStep);
+        }
     }
 
-    [Serializable]
     public class UpgradeData {
         public Observable<int> Level;
-        public Observable<float> Power;
-        public Observable<int> Price;
+        public Observable<int> InvestedStep;
+        public float Power;
     }
 }
