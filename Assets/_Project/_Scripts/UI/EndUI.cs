@@ -1,7 +1,7 @@
-﻿using Game;
+﻿using DG.Tweening;
+using Game;
 using Helpers;
 using TMPro;
-using UnityEditor.Localization.Plugins.XLIFF.V12;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -11,6 +11,8 @@ namespace UI {
         #region SerializedFields
         [Header("RectTransforms")]
         [SerializeField] private RectTransform _panel;
+        [SerializeField] private RectTransform _bgPanel;
+        [SerializeField] private Image _fadePanel;
         [Header("Buttons")]
         [SerializeField] private Button _xButton;
         [SerializeField] private Button _takeBtn;
@@ -23,19 +25,22 @@ namespace UI {
 
         #region PrivateFields
         private const float PanelPopDuration = .35f;
+        private const float FadeDuration = 1f;
         
         #endregion
 
         #region Initialization
         public void Initialize() {
-            Main.Instance.IsStarted.OnUpdate += OnIsStartedChange;
+            Main.Instance.StateManager.State.OnUpdate += OnGameStateChange;
             
             _xButton.onClick.AddListener(OnClickTakeWithMultiplier);
             _takeBtn.onClick.AddListener(OnClickTake);
         }
 
         public void Deinitialize() {
-            Main.Instance.IsStarted.OnUpdate -= OnIsStartedChange;
+            _fadePanel.DOKill();
+            
+            Main.Instance.StateManager.State.OnUpdate -= OnGameStateChange;
             
             _xButton.onClick.RemoveAllListeners();
             _takeBtn.onClick.RemoveAllListeners();
@@ -44,6 +49,7 @@ namespace UI {
 
         #region UI
         private void SetState(bool active) {
+            _bgPanel.gameObject.SetActive(active);
             _panel.gameObject.SetActive(true);
             _panel.Pop(
                 active,
@@ -60,7 +66,16 @@ namespace UI {
         }
         
         private void OnClickTake() {
-            // Grant Reward
+            // add money
+            _fadePanel.raycastTarget = true;
+            _fadePanel
+                .DOFade(1, FadeDuration)
+                .OnComplete(() => {
+                    Main.Instance.StateManager.State.Set(StateManager.GameState.GatheredReward);
+                    _fadePanel.DOFade(0, FadeDuration).OnComplete(() => _fadePanel.raycastTarget = false);
+                });
+            
+            SetState(false);
         }
         
         private void SetLabels() {
@@ -69,11 +84,9 @@ namespace UI {
         #endregion
 
         #region Events
-        private void OnIsStartedChange(bool arg1, bool started) {
-            if (started)
-                return;
-
-            SetState(true);
+        private void OnGameStateChange(StateManager.GameState arg1, StateManager.GameState state) {
+            if (state is StateManager.GameState.Lose or StateManager.GameState.Win)
+                SetState(true);
         }
         #endregion
     }

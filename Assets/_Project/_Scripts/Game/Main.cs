@@ -17,18 +17,24 @@ namespace Game {
         [SerializeField] private TapToPlayUI _tapToPlayUI;
         [SerializeField] private UpgradesUI _upgradesUI;
         [SerializeField] private CurrencyUI _currencyUI;
+        [SerializeField] private EndUI _endUI;
         [Header("Storage")]
         [AlchemySerializeField, NonSerialized] public Dictionary<Models.CurrencyType, Sprite> CurrencyIcons;
+        [AlchemySerializeField, NonSerialized] public Dictionary<int, LevelData> PredifinedLevelsPb;
         #endregion
 
         #region PrivateFields
         private Models.Shredder _shredderData;
         private List<Models.Level> _levelsData;
+
         #endregion
         
         #region Properties
-        public Observable<bool> IsStarted { get; private set; }
+        public StateManager StateManager { get; private set; }
+        public LevelManager LevelManager  { get; private set; }
+        
         public Models.Currency CurrencyData { get; private set; }
+        public int CurrentLevelID { get; set; }
         public Observable<int> RunReceivedMoney { get; private set; }
         public Observable<int> RunReceivedCrystals { get; private set; }
         #endregion
@@ -36,9 +42,9 @@ namespace Game {
         #region Behaviour
         protected override void Awake() {
             base.Awake();
-            
-            IsStarted = new Observable<bool>(false);
-            
+
+            StateManager = new StateManager();
+                
             Load();
             Initialize();
         }
@@ -46,21 +52,28 @@ namespace Game {
         protected override void OnDisable() {
             base.OnDisable();
 
+            Save();
             Deinitialize();
         }
 
         private void Initialize() {
+            LevelManager = new LevelManager(_levelsData);
+            
+            Shredder.Initialize(_shredderData);
             _tapToPlayUI.Initialize();
             _upgradesUI.Initialize(_shredderData);
             _currencyUI.Initialize(CurrencyData);
+            _endUI.Initialize();
         }
         
         private void Deinitialize() {
+            LevelManager.Deinitialize();
+            
+            Shredder.Deinitialize();
             _tapToPlayUI.Deinitialize();
             _upgradesUI.Deinitialize();
             _currencyUI.Deinitialize();
-            
-            Shredder.Deinitialize();
+            _endUI.Deinitialize();
         }
         #endregion
 
@@ -83,9 +96,7 @@ namespace Game {
                     InvestedStep = new Observable<int>(0),
                 }
             };
-
             _shredderData = SavingSystem.GetOrCreate(Constants.ShredderSaveKey, defaultShredder);
-            Shredder.Initialize(_shredderData);
 
             var defaultCurrency = new Models.Currency {
                 Coins = new Observable<int>(0),
@@ -93,25 +104,27 @@ namespace Game {
             };
             CurrencyData = SavingSystem.GetOrCreate(Constants.CurrencySaveKey, defaultCurrency);
 
-            var defaultLevels = new List<Models.Level> {
-                new() {
-                    ID = 1,
-                    IsReached = new Observable<bool>(false),
-                    CurrentDistance = new Observable<int>(0),
-                },
-            };
+            var defaultLevels = new List<Models.Level>();
+            foreach (var predifinedLvl in PredifinedLevelsPb) {
+                var lvlData = new Models.Level();
+                lvlData.ID = predifinedLvl.Key;
+                lvlData.IsReached = new OwnedObservable<Models.Level, bool>(lvlData, false);
+                lvlData.RecordDistance = new Observable<int>(0);
+                defaultLevels.Add(lvlData);
+            }
             _levelsData = SavingSystem.GetOrCreate(Constants.LevelsSaveKey, defaultLevels);
+            CurrentLevelID = SavingSystem.GetOrCreate(Constants.CurrentLvlIDSaveKey, 1);
+        }
+
+        private void Save() {
+            SavingSystem.Save(_shredderData, Constants.ShredderSaveKey);
+            SavingSystem.Save(CurrencyData, Constants.CurrencySaveKey);
+            SavingSystem.Save(_levelsData, Constants.LevelsSaveKey);
+            SavingSystem.Save(CurrentLevelID, Constants.CurrentLvlIDSaveKey);
         }
         #endregion
 
-        #region Events
-        
-        #endregion
-
         #region DEBUG
-        [Button]
-        private void ToggleIsStarted() => IsStarted.Set(!IsStarted.Value());
-        
         [Button]
         private void GiveCoins(int amount) => CurrencyData.Add(Models.CurrencyType.Coin, amount);
         

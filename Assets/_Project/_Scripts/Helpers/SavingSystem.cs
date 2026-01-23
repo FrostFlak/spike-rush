@@ -117,5 +117,45 @@ namespace Helpers {
             return instance;
         }
     }
+    
+    public class OwnedObservableConverter : JsonConverter {
+        public override bool CanConvert(Type objectType) {
+            // Check if type is generic and is OwnedObservable<,>
+            return objectType.IsGenericType && objectType.GetGenericTypeDefinition() == typeof(OwnedObservable<,>);
+        }
+
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer) {
+            if (value == null) {
+                writer.WriteNull();
+                return;
+            }
+
+            // Call Value() method to get the inner value
+            var method = value.GetType().GetMethod("Value");
+            var innerValue = method.Invoke(value, null);
+            serializer.Serialize(writer, innerValue);
+        }
+
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer) {
+            // Get the generic type parameters: TOwner and T
+            var typeArgs = objectType.GetGenericArguments();
+            var ownerType = typeArgs[0];
+            var valueType = typeArgs[1];
+
+            // Deserialize the inner value
+            var innerValue = serializer.Deserialize(reader, valueType);
+
+            // NOTE: We cannot create an instance without the owner
+            // So we require that existingValue is the owner or pass it separately
+            if (existingValue == null)
+            {
+                throw new JsonSerializationException($"Cannot create OwnedObservable<{ownerType.Name},{valueType.Name}> without owner instance.");
+            }
+
+            // Construct new OwnedObservable with owner and value
+            var instance = Activator.CreateInstance(objectType, existingValue, innerValue);
+            return instance;
+        }
+    }
     #endregion
 }

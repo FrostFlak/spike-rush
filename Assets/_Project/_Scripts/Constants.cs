@@ -6,6 +6,7 @@ public static class Constants {
     public const string ShredderSaveKey = "shredder"; 
     public const string CurrencySaveKey = "currency";
     public const string LevelsSaveKey = "levels";
+    public const string CurrentLvlIDSaveKey = "currentLvlId";
     #endregion
 
     #region Upgrades
@@ -13,7 +14,7 @@ public static class Constants {
     private const float LevelBonusStep = 0.05f;
     
     public const int UpgradeDefaultPrice = 100;
-    public const float DefaultAcceleration = 3f;
+    public const float DefaultAcceleration = 1f;
     public const float DefaultPower = 0.5f;
     public const int DefaultFuel = 100;
     

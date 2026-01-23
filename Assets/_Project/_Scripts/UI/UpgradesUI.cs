@@ -49,7 +49,7 @@ namespace UI {
         public void Initialize(Models.Shredder shredder) {
             _shredderData = shredder;
 
-            Main.Instance.IsStarted.OnUpdate += OnIsStartedChange;
+            Main.Instance.StateManager.State.OnUpdate += OnGameStateChange;
             Main.Instance.CurrencyData.Coins.OnUpdate += OnCoinsChange;
             
             _shredderData.AccelerationData.Level.OnUpdate += OnAccelerationLvlChange;
@@ -76,6 +76,9 @@ namespace UI {
         }
 
         public void Deinitialize() {
+            Main.Instance.StateManager.State.OnUpdate -= OnGameStateChange;
+            Main.Instance.CurrencyData.Coins.OnUpdate -= OnCoinsChange;
+            
             _shredderData.AccelerationData.Level.OnUpdate -= OnAccelerationLvlChange;
             _shredderData.AccelerationData.InvestedStep.OnUpdate -= OnAccelerationInvestedStepChange;
             _shredderData.PowerData.Level.OnUpdate -= OnPowerLvlChange;
@@ -88,9 +91,7 @@ namespace UI {
         #endregion
 
         #region Panel
-        private void SlideParentPanel() {
-            _parentRect.DOAnchorPosY(-_parentRect.anchoredPosition.y, ParentRectSlideDuration).SetEase(Ease.OutBounce);
-        }
+        private void SlideParentPanel() => _parentRect.DOAnchorPosY(-_parentRect.anchoredPosition.y, ParentRectSlideDuration).SetEase(Ease.OutBounce);
         #endregion
 
         #region Acceleration
@@ -250,7 +251,10 @@ namespace UI {
         #endregion
 
         #region Events
-        private void OnIsStartedChange(bool arg1, bool started) => SlideParentPanel();
+        private void OnGameStateChange(StateManager.GameState _, StateManager.GameState state) {
+            if (state is StateManager.GameState.Playing or StateManager.GameState.Win or StateManager.GameState.Lose)
+                SlideParentPanel();
+        }
         
         private void OnCoinsChange(int arg1, int arg2) {
             SetAccelerationPrice();

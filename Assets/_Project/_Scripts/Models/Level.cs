@@ -3,8 +3,7 @@
 namespace Models {
     public class Level {
         public int ID;
-        public Observable<bool> IsReached;
-        public Observable<int> CurrentDistance;
-        public int MaxDistance;
+        public OwnedObservable<Level, bool> IsReached;
+        public Observable<int> RecordDistance;
     }
 }

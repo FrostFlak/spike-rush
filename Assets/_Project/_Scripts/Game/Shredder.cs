@@ -1,5 +1,5 @@
-﻿using Helpers;
-using UI;
+﻿using UI;
+using Unity.Logging;
 using UnityEngine;
 
 namespace Game {
@@ -8,6 +8,7 @@ namespace Game {
         #region SerializedFields
         [Header("Components")]
         [SerializeField] private Rigidbody _rigidbody;
+        [SerializeField] private Joystick _joystick;
         [SerializeField] private HUD _hud;
         [Header("Properties")]
         [Header("Movement(m/s)")]
@@ -25,103 +26,125 @@ namespace Game {
         
         private Models.Shredder _shredderData;
         
+        private Vector3 _input;
         private float _currentFuel;
         private float _currentHeatLevel;
         private bool _isOverheated;
         private bool _isActive;
+        
         private bool CanMove => _currentFuel > 0 && !_isOverheated;
         #endregion
 
         #region Initialization
         public void Initialize(Models.Shredder shredderData) {
             _shredderData = shredderData;
-
             _hud.Initialize();
-            Main.Instance.IsStarted.OnUpdate += OnIsStartedChange;
+            
+            Main.Instance.StateManager.State.OnUpdate += OnGameStateChange;
         }
 
         public void Deinitialize() {
             _hud.Deinitialize();
-            Main.Instance.IsStarted.OnUpdate -= OnIsStartedChange;
+            
+            Main.Instance.StateManager.State.OnUpdate -= OnGameStateChange;
         }
         #endregion
 
         #region State
         private void SetShredderState(bool active) {
-            if (active)
-                ResetState();
-            
-            _isActive = active;
-        }
-
-        private void ResetState() {
+            transform.rotation = Quaternion.identity;
             _currentFuel = _shredderData.FuelData.Power;
             _currentHeatLevel = 0f;
             _isOverheated = false;
+            _isActive = active;
+            _rigidbody.isKinematic = !active;
         }
+        
+        public void ReturnToStart(Vector3 position) => _rigidbody.position = position;
         #endregion
 
         #region Behaviour
         private void Update() {
-            if (!_isActive)
-                return;
-            
-            HandleFuelAndHeat();
-            _hud.UpdateFuelUI(_currentFuel, _shredderData.FuelData.Power);
-            _hud.UpdateHeatUI(_currentHeatLevel, MaxHeat, _isOverheated);
-            _hud.UpdateSpeedUI(Mathf.RoundToInt(_rigidbody.linearVelocity.magnitude * 3.6f));
+            if (_isActive) {
+                _input = GatherInput();
+                
+                _hud.UpdateFuelUI(_currentFuel, _shredderData.FuelData.Power);
+                _hud.UpdateHeatUI(_currentHeatLevel, MaxHeat, _isOverheated);
+                _hud.UpdateSpeedUI(Mathf.RoundToInt(_rigidbody.linearVelocity.magnitude * 3.6f));
+            }
 
-            if (_currentFuel <= 0 && _rigidbody.linearVelocity.magnitude <= 0.1f)
-                EndRun();
-        }
-
-        private void EndRun() {
-            if (!_isActive)
-                return;
-
-            Main.Instance.IsStarted.Set(false);
+            _hud.UpdateDistanceLabel(Mathf.RoundToInt(Vector3.Distance(transform.position, Main.Instance.LevelManager.ActiveLevel.StartTransform.position)));
+            _hud.UpdateLvlProgressBar(transform);
         }
 
         private void FixedUpdate() {
-            if (!_isActive)
+            if (!_isActive) 
                 return;
             
             ApplyMovement();
+            HandleFuelAndHeat();
         }
         #endregion
 
         #region Fuel/Heat
         private void HandleFuelAndHeat() {
-            if (Input.GetMouseButton(0) && CanMove) {
-                _currentFuel -= _fuelConsumptionRate * Time.deltaTime;
-                _currentHeatLevel += _heatRate * Time.deltaTime;
-                
-                if (_currentHeatLevel >= 100f) 
-                    OverheatLock();
+            if (_currentHeatLevel > 0)
+                _currentHeatLevel -= _coolRate * Time.fixedDeltaTime;
+            
+            if (_isOverheated && _currentHeatLevel <= 0) {
+                _isOverheated = false;
+                _currentHeatLevel = 0;
             }
-            else {
-                _currentHeatLevel = Mathf.MoveTowards(_currentHeatLevel, 0f, _coolRate * Time.deltaTime);
-                if (_isOverheated && _currentHeatLevel <= 0) 
-                    _isOverheated = false;
-            }
+
+            if (_currentFuel <= 0 && _rigidbody.linearVelocity.magnitude <= 0.25f) 
+                Lose();
+
+            _currentHeatLevel = Mathf.Clamp(_currentHeatLevel, 0, MaxHeat);
         }
         
-        private void OverheatLock() {
+        private void TriggerOverheat() {
             _isOverheated = true;
-            _currentHeatLevel = 100f;
-            _rigidbody.linearVelocity *= 0.75f;
+            _currentHeatLevel = MaxHeat;
+            _rigidbody.linearVelocity *= 0.8f;
+        }
+        
+        private void Lose() {
+            if (!_isActive) 
+                return;
+            
+            _rigidbody.linearVelocity = Vector3.zero;
+            _isActive = false;
+            Main.Instance.StateManager.FailLvl();
         }
         #endregion
 
         #region Movement
+        private Vector3 GatherInput() {
+            Vector3 joystickInput = new Vector3(_joystick.Horizontal, 0f, _joystick.Vertical);
+            Vector3 keyboardInput = new Vector3(Input.GetAxis("Horizontal"), 0f, Input.GetAxis("Vertical"));
+            
+            return joystickInput.sqrMagnitude > 0.01f ? joystickInput.normalized : keyboardInput.normalized;
+        }
+        
         private void ApplyMovement() {
-            if (Input.GetMouseButton(0) && CanMove) {
-                if (_rigidbody.linearVelocity.z < _maxSpeed) 
-                    _rigidbody.AddForce(Vector3.forward * _shredderData.AccelerationData.Power, ForceMode.Acceleration);
-            }
+            float moveVertical = _input.z;
+            float moveHorizontal = _input.x;
 
-            if (_currentFuel <= 0) {
-                _rigidbody.AddForce(-transform.forward * _stoppingAccelerationForce, ForceMode.Acceleration); // ????
+            Vector3 movement = new Vector3(moveHorizontal, 0, moveVertical).normalized;
+
+            if (CanMove && movement.sqrMagnitude > 0.01f) {
+                if (_rigidbody.linearVelocity.magnitude < _maxSpeed) 
+                    _rigidbody.AddForce(movement * _shredderData.AccelerationData.Power, ForceMode.Acceleration);
+
+                _currentFuel -= _fuelConsumptionRate * Time.fixedDeltaTime;
+                _currentHeatLevel += _heatRate * Time.fixedDeltaTime;
+
+                if (_currentHeatLevel >= MaxHeat) 
+                    TriggerOverheat();
+            } 
+            else {
+                if (_rigidbody.linearVelocity.magnitude > 0.1f) 
+                    _rigidbody.AddForce(-_rigidbody.linearVelocity.normalized * _stoppingAccelerationForce, ForceMode.Acceleration);
             }
         }
         #endregion
@@ -139,19 +162,26 @@ namespace Game {
         }
 
         private void ApplyImpact(float loss, float heat) {
-            Vector3 velocity = _rigidbody.linearVelocity;
-            velocity.z = Mathf.Max(0, velocity.z * Mathf.Clamp01(1f - loss));
-            _rigidbody.linearVelocity = velocity;
+            _rigidbody.linearVelocity *= (1f - loss);
             
-            _currentHeatLevel = Mathf.Clamp(_currentHeatLevel + heat, 0, MaxHeat);
-            
-            // Тряска камеры (чем тяжелее был объект, тем сильнее трясет)
-            // CameraShaker.Instance.Shake(loss * 0.1f);
+            _currentHeatLevel += heat;
+            if (_currentHeatLevel >= MaxHeat) 
+                TriggerOverheat();
         }
         #endregion
-
+        
         #region Events
-        private void OnIsStartedChange(bool _, bool started) => SetShredderState(started);
+        private void OnGameStateChange(StateManager.GameState arg1, StateManager.GameState state) {
+            switch (state) {
+                case StateManager.GameState.Lose or StateManager.GameState.Win:
+                    SetShredderState(false);
+                    break;
+                
+                case StateManager.GameState.Playing:
+                    SetShredderState(true);
+                    break;
+            }
+        }
         #endregion
     }
 }
