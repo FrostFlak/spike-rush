@@ -25,7 +25,6 @@ namespace Game {
 
         #region PrivateFields
         private Models.Shredder _shredderData;
-        private List<Models.Level> _levelsData;
 
         #endregion
         
@@ -33,10 +32,13 @@ namespace Game {
         public StateManager StateManager { get; private set; }
         public LevelManager LevelManager  { get; private set; }
         
-        public Models.Currency CurrencyData { get; private set; }
         public int CurrentLevelID { get; set; }
-        public Observable<int> RunReceivedMoney { get; private set; }
-        public Observable<int> RunReceivedCrystals { get; private set; }
+        public Models.Currency CurrencyData { get; private set; }
+        public List<Models.Level> LevelsData { get; private set; }
+        
+        public int CurrentDistance { get; set; }
+        public int RunReceivedCoins { get; set; }
+        public int RunReceivedDiamonds { get; set; }
         #endregion
 
         #region Behaviour
@@ -57,12 +59,12 @@ namespace Game {
         }
 
         private void Initialize() {
-            LevelManager = new LevelManager(_levelsData);
+            LevelManager = new LevelManager();
             
             Shredder.Initialize(_shredderData);
             _tapToPlayUI.Initialize();
             _upgradesUI.Initialize(_shredderData);
-            _currencyUI.Initialize(CurrencyData);
+            _currencyUI.Initialize();
             _endUI.Initialize();
         }
         
@@ -112,14 +114,14 @@ namespace Game {
                 lvlData.RecordDistance = new Observable<int>(0);
                 defaultLevels.Add(lvlData);
             }
-            _levelsData = SavingSystem.GetOrCreate(Constants.LevelsSaveKey, defaultLevels);
+            LevelsData = SavingSystem.GetOrCreate(Constants.LevelsSaveKey, defaultLevels);
             CurrentLevelID = SavingSystem.GetOrCreate(Constants.CurrentLvlIDSaveKey, 1);
         }
 
         private void Save() {
             SavingSystem.Save(_shredderData, Constants.ShredderSaveKey);
             SavingSystem.Save(CurrencyData, Constants.CurrencySaveKey);
-            SavingSystem.Save(_levelsData, Constants.LevelsSaveKey);
+            SavingSystem.Save(LevelsData, Constants.LevelsSaveKey);
             SavingSystem.Save(CurrentLevelID, Constants.CurrentLvlIDSaveKey);
         }
         #endregion

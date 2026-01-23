@@ -17,16 +17,17 @@ namespace UI {
         [SerializeField] private Button _xButton;
         [SerializeField] private Button _takeBtn;
         [Header("Labels")]
+        [SerializeField] private TMP_Text _outOfFuelLabel;
+        [SerializeField] private TMP_Text _levelReachedLabel;
         [SerializeField] private TMP_Text _coinsLabel;
         [SerializeField] private TMP_Text _diamondsLabel;
-        [SerializeField] private TMP_Text _distanceLabel;
-        [SerializeField] private TMP_Text _newRecordLabel;
         #endregion
 
         #region PrivateFields
         private const float PanelPopDuration = .35f;
         private const float FadeDuration = 1f;
         
+        private int _adMultiplier = 1;
         #endregion
 
         #region Initialization
@@ -59,14 +60,28 @@ namespace UI {
                         _panel.gameObject.SetActive(false);
                 }
             );
+            
+            if (!active)
+                return;
+            
+            SetLabels();
         }
         
         private void OnClickTakeWithMultiplier() {
             // Show Rewarded Ad
+            _adMultiplier = 3;
+            OnClickTake();
+            
+            _adMultiplier = 0;
         }
         
         private void OnClickTake() {
-            // add money
+            Main.Instance.CurrencyData.Add(Models.CurrencyType.Diamond, Main.Instance.RunReceivedDiamonds * _adMultiplier);
+            Main.Instance.RunReceivedDiamonds = 0;
+            
+            Main.Instance.CurrencyData.Add(Models.CurrencyType.Coin, Main.Instance.RunReceivedCoins * _adMultiplier);
+            Main.Instance.RunReceivedCoins = 0;
+            
             _fadePanel.raycastTarget = true;
             _fadePanel
                 .DOFade(1, FadeDuration)
@@ -79,7 +94,17 @@ namespace UI {
         }
         
         private void SetLabels() {
-            // _coinsLabel.SetText();
+            if (Main.Instance.StateManager.State.Value() is StateManager.GameState.Win) {
+                _outOfFuelLabel.gameObject.SetActive(false);
+                _levelReachedLabel.gameObject.SetActive(true);
+            }
+            else if (Main.Instance.StateManager.State.Value() is StateManager.GameState.Lose) {
+                _outOfFuelLabel.gameObject.SetActive(true);
+                _levelReachedLabel.gameObject.SetActive(false);
+            }
+            
+            _coinsLabel.SetText(Main.Instance.RunReceivedCoins.ToString());
+            _diamondsLabel.SetText(Main.Instance.RunReceivedDiamonds.ToString());
         }
         #endregion
 

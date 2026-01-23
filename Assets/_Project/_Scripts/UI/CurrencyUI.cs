@@ -1,4 +1,5 @@
-﻿using TMPro;
+﻿using Game;
+using TMPro;
 using UnityEngine;
 
 namespace UI {
@@ -11,31 +12,25 @@ namespace UI {
         [SerializeField] private TMP_Text _diamondsLabel;
         #endregion
 
-        #region PrivateFields
-        private Models.Currency _currencyData;
-        #endregion
-        
         #region Initialization
-        public void Initialize(Models.Currency currency) {
-            _currencyData = currency;
-
-            _currencyData.Coins.OnUpdate += OnCoinsChange;
-            _currencyData.Diamonds.OnUpdate += OnDiamondsChange;
+        public void Initialize() {
+            Main.Instance.CurrencyData.Coins.OnUpdate += OnCoinsChange;
+            Main.Instance.CurrencyData.Diamonds.OnUpdate += OnDiamondsChange;
 
             SetCoinsLabels();
             SetDiamondsLabels();
         }
 
         public void Deinitialize() {
-            _currencyData.Coins.OnUpdate -= OnCoinsChange;
-            _currencyData.Diamonds.OnUpdate -= OnDiamondsChange;
+            Main.Instance.CurrencyData.Coins.OnUpdate -= OnCoinsChange;
+            Main.Instance.CurrencyData.Diamonds.OnUpdate -= OnDiamondsChange;
         }
         #endregion
 
         #region UI
-        private void SetCoinsLabels() => _coinsLabel.SetText(_currencyData.Coins.Value().ToString());
+        private void SetCoinsLabels() => _coinsLabel.SetText(Main.Instance.CurrencyData.Coins.Value().ToString());
         
-        private void SetDiamondsLabels() => _diamondsLabel.SetText(_currencyData.Diamonds.Value().ToString());
+        private void SetDiamondsLabels() => _diamondsLabel.SetText(Main.Instance.CurrencyData.Diamonds.Value().ToString());
         #endregion
 
         #region Events

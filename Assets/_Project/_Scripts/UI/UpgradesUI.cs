@@ -41,6 +41,8 @@ namespace UI {
 
         #region PrivateFields
         private const float ParentRectSlideDuration = .75f;
+        private const int EnabledYPosition = 330;
+        private const int DisabledYPosition = -330;
         
         private Models.Shredder _shredderData;
         #endregion
@@ -91,7 +93,7 @@ namespace UI {
         #endregion
 
         #region Panel
-        private void SlideParentPanel() => _parentRect.DOAnchorPosY(-_parentRect.anchoredPosition.y, ParentRectSlideDuration).SetEase(Ease.OutBounce);
+        private void SlideParentPanel(bool active) => _parentRect.DOAnchorPosY(active ? EnabledYPosition : DisabledYPosition, ParentRectSlideDuration).SetEase(Ease.OutBounce);
         #endregion
 
         #region Acceleration
@@ -252,8 +254,10 @@ namespace UI {
 
         #region Events
         private void OnGameStateChange(StateManager.GameState _, StateManager.GameState state) {
-            if (state is StateManager.GameState.Playing or StateManager.GameState.Win or StateManager.GameState.Lose)
-                SlideParentPanel();
+            if (state is StateManager.GameState.Playing)
+                SlideParentPanel(false);
+            else if (state is StateManager.GameState.Win or StateManager.GameState.Lose) 
+                SlideParentPanel(true);
         }
         
         private void OnCoinsChange(int arg1, int arg2) {

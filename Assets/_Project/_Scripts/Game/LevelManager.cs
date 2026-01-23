@@ -1,16 +1,12 @@
-﻿using System.Collections.Generic;
-using Unity.Logging;
+﻿using Unity.Logging;
 using UnityEngine;
 
 namespace Game {
     public class LevelManager {
 
-        private readonly List<Models.Level> _levelsData;
         public LevelData ActiveLevel { get; private set; }
 
-        public LevelManager(List<Models.Level> levelsData) {
-            _levelsData = levelsData;
-            
+        public LevelManager() {
             Main.Instance.StateManager.State.OnUpdate += OnGameStateChange;
             SpawnLevel();
         }
@@ -32,7 +28,7 @@ namespace Game {
         
         private void OnGameStateChange(StateManager.GameState oldState, StateManager.GameState state) {
             if (oldState is StateManager.GameState.Win && state is StateManager.GameState.GatheredReward) {
-                _levelsData[Main.Instance.CurrentLevelID].IsReached.Set(true);
+                Main.Instance.LevelsData[Main.Instance.CurrentLevelID].IsReached.Set(true);
                 Main.Instance.CurrentLevelID++;
                 SpawnLevel();
             }

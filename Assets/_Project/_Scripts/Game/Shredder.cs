@@ -1,4 +1,5 @@
-﻿using UI;
+﻿using Helpers;
+using UI;
 using Unity.Logging;
 using UnityEngine;
 
@@ -19,13 +20,16 @@ namespace Game {
         [Header("Heat")]
         [SerializeField] private float _heatRate = 20f;
         [SerializeField] private float _coolRate = 15f;
+        [Header("Prefabs")]
+        [SerializeField] private WorldSpacePayout _worldSpacePayoutPb;
         #endregion
 
         #region PrivateFields
         private const int MaxHeat = 100;
         
         private Models.Shredder _shredderData;
-        
+
+        private ObjectPool<WorldSpacePayout> _worldSpacePayoutPool;
         private Vector3 _input;
         private float _currentFuel;
         private float _currentHeatLevel;
@@ -38,6 +42,7 @@ namespace Game {
         #region Initialization
         public void Initialize(Models.Shredder shredderData) {
             _shredderData = shredderData;
+            _worldSpacePayoutPool = new ObjectPool<WorldSpacePayout>(_worldSpacePayoutPb, 5);
             _hud.Initialize();
             
             Main.Instance.StateManager.State.OnUpdate += OnGameStateChange;
@@ -73,8 +78,9 @@ namespace Game {
                 _hud.UpdateSpeedUI(Mathf.RoundToInt(_rigidbody.linearVelocity.magnitude * 3.6f));
             }
 
-            _hud.UpdateDistanceLabel(Mathf.RoundToInt(Vector3.Distance(transform.position, Main.Instance.LevelManager.ActiveLevel.StartTransform.position)));
-            _hud.UpdateLvlProgressBar(transform);
+            Main.Instance.CurrentDistance = Mathf.RoundToInt(Vector3.Distance(transform.position, Main.Instance.LevelManager.ActiveLevel.StartTransform.position));
+            _hud.UpdateDistanceLabel();
+            _hud.UpdateLvlProgressBar();
         }
 
         private void FixedUpdate() {
@@ -129,12 +135,14 @@ namespace Game {
         private void ApplyMovement() {
             float moveVertical = _input.z;
             float moveHorizontal = _input.x;
-
             Vector3 movement = new Vector3(moveHorizontal, 0, moveVertical).normalized;
-
+            
             if (CanMove && movement.sqrMagnitude > 0.01f) {
-                if (_rigidbody.linearVelocity.magnitude < _maxSpeed) 
-                    _rigidbody.AddForce(movement * _shredderData.AccelerationData.Power, ForceMode.Acceleration);
+                if (Mathf.Abs(_rigidbody.linearVelocity.z) < _maxSpeed)
+                    _rigidbody.AddForce(Vector3.forward * moveVertical * _shredderData.AccelerationData.Power, ForceMode.Acceleration);
+
+                if (Mathf.Abs(_rigidbody.linearVelocity.x) < _maxSpeed)
+                    _rigidbody.AddForce(Vector3.right * moveHorizontal * _shredderData.AccelerationData.Power * 2.5f, ForceMode.Acceleration);
 
                 _currentFuel -= _fuelConsumptionRate * Time.fixedDeltaTime;
                 _currentHeatLevel += _heatRate * Time.fixedDeltaTime;
@@ -146,19 +154,26 @@ namespace Game {
                 if (_rigidbody.linearVelocity.magnitude > 0.1f) 
                     _rigidbody.AddForce(-_rigidbody.linearVelocity.normalized * _stoppingAccelerationForce, ForceMode.Acceleration);
             }
+            
+            Vector3 vel = _rigidbody.linearVelocity;
+            vel.z = Mathf.Clamp(vel.z, -_maxSpeed, _maxSpeed);
+            vel.x = Mathf.Clamp(vel.x, -_maxSpeed, _maxSpeed); 
+            _rigidbody.linearVelocity = vel;
         }
         #endregion
 
         #region Collisions
         private void OnTriggerEnter(Collider other) {
-            if (!other.TryGetComponent(out Destructibile destructibile)) 
+            if (!other.TryGetComponent(out Destructible destructibile)) 
                 return;
             
             ApplyImpact(destructibile.SpeedLoss / 100f, destructibile.HeatPenalty);
             destructibile.SpawnFragments();
+            var payoutUI = _worldSpacePayoutPool.Get(destructibile.transform.position, Quaternion.identity);
+            payoutUI.SetPayout(destructibile.MoneyPayout, Models.CurrencyType.Coin, () => _worldSpacePayoutPool.Return(payoutUI));
 
             var totalUpgradesLvl = _shredderData.FuelData.Level.Value() + _shredderData.PowerData.Level.Value() + _shredderData.AccelerationData.Level.Value();
-            Main.Instance.RunReceivedMoney.Set(Main.Instance.RunReceivedMoney.Value() + Constants.GetMoneyByObject(destructibile.MoneyPayout, totalUpgradesLvl));
+            Main.Instance.RunReceivedCoins += Constants.GetMoneyByObject(destructibile.MoneyPayout, totalUpgradesLvl);
         }
 
         private void ApplyImpact(float loss, float heat) {
