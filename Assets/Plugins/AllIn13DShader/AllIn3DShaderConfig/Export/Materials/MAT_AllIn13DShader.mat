@@ -368,7 +368,7 @@ Material:
     - _HighlightOffset: {r: 0, g: 0, b: 0, a: 0}
     - _HighlightsColor: {r: 2, g: 2, b: 2, a: 1}
     - _HitColor: {r: 1, g: 1, b: 1, a: 1}
-    - _HologramColor: {r: 0.29744, g: 2.0341058, b: 0.5951543, a: 0.8235294}
+    - _HologramColor: {r: 0, g: 2.7156909, b: 0.4664991, a: 0.8235294}
     - _HologramLineDirection: {r: 0, g: 1, b: 0, a: 0}
     - _OutlineColor: {r: 0, g: 0, b: 0, a: 1}
     - _RimColor: {r: 1, g: 1, b: 1, a: 1}

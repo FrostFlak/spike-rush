@@ -14,7 +14,7 @@ namespace Game {
         [SerializeField, Range(1, 99)] private float _explosionForce = 5f;
         [field: SerializeField, Range(1, 99)] public float SpeedLoss { get; private set; }
         [field: SerializeField, Range(1, 99)] public float HeatPenalty { get; private set; }
-        [field: SerializeField] public int MoneyPayout { get; private set; }
+        [field: SerializeField] public int CoinsPayout { get; private set; }
         #endregion
 
         #region Behaviour

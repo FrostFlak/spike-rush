@@ -111,7 +111,7 @@ Rigidbody:
   m_ImplicitTensor: 1
   m_UseGravity: 1
   m_IsKinematic: 0
-  m_Interpolate: 1
+  m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
 --- !u!1 &1885867062705343071
@@ -225,7 +225,7 @@ Rigidbody:
   m_ImplicitTensor: 1
   m_UseGravity: 1
   m_IsKinematic: 0
-  m_Interpolate: 1
+  m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
 --- !u!1 &1995491529861130643
@@ -339,7 +339,7 @@ Rigidbody:
   m_ImplicitTensor: 1
   m_UseGravity: 1
   m_IsKinematic: 0
-  m_Interpolate: 1
+  m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
 --- !u!1 &2433273718625986320
@@ -453,7 +453,7 @@ Rigidbody:
   m_ImplicitTensor: 1
   m_UseGravity: 1
   m_IsKinematic: 0
-  m_Interpolate: 1
+  m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
 --- !u!1 &3713570263425427123
@@ -567,7 +567,7 @@ Rigidbody:
   m_ImplicitTensor: 1
   m_UseGravity: 1
   m_IsKinematic: 0
-  m_Interpolate: 1
+  m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
 --- !u!1 &6434435103503368931
@@ -681,7 +681,7 @@ Rigidbody:
   m_ImplicitTensor: 1
   m_UseGravity: 1
   m_IsKinematic: 0
-  m_Interpolate: 1
+  m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
 --- !u!1 &7236491807632250389
@@ -795,7 +795,7 @@ Rigidbody:
   m_ImplicitTensor: 1
   m_UseGravity: 1
   m_IsKinematic: 0
-  m_Interpolate: 1
+  m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
 --- !u!1 &7615841359564625746
@@ -909,7 +909,7 @@ Rigidbody:
   m_ImplicitTensor: 1
   m_UseGravity: 1
   m_IsKinematic: 0
-  m_Interpolate: 1
+  m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
 --- !u!1 &8333976043482112951
@@ -1023,7 +1023,7 @@ Rigidbody:
   m_ImplicitTensor: 1
   m_UseGravity: 1
   m_IsKinematic: 0
-  m_Interpolate: 1
+  m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
 --- !u!1 &8614093450535847768
@@ -1137,7 +1137,7 @@ Rigidbody:
   m_ImplicitTensor: 1
   m_UseGravity: 1
   m_IsKinematic: 0
-  m_Interpolate: 1
+  m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
 --- !u!1 &8859390106218640856
@@ -1279,6 +1279,10 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2715221442997987128, guid: bd249d40107be6b4a8fe030272ce2544, type: 3}
+      propertyPath: _explosionForce
+      value: 15
+      objectReference: {fileID: 0}
+    - target: {fileID: 2715221442997987128, guid: bd249d40107be6b4a8fe030272ce2544, type: 3}
       propertyPath: _destructedRb.Array.size
       value: 10
       objectReference: {fileID: 0}
@@ -1322,6 +1326,14 @@ PrefabInstance:
       propertyPath: '_destructedRb.Array.data[9]'
       value: 
       objectReference: {fileID: 6763491856181789334}
+    - target: {fileID: 2715221442997987128, guid: bd249d40107be6b4a8fe030272ce2544, type: 3}
+      propertyPath: <CoinsPayout>k__BackingField
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 2715221442997987128, guid: bd249d40107be6b4a8fe030272ce2544, type: 3}
+      propertyPath: <HeatPenalty>k__BackingField
+      value: 2
+      objectReference: {fileID: 0}
     - target: {fileID: 4218449007655226476, guid: bd249d40107be6b4a8fe030272ce2544, type: 3}
       propertyPath: m_Center.z
       value: 0

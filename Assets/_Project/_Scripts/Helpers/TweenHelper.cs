@@ -154,7 +154,8 @@ namespace Helpers {
             this TMPro.TMP_Text label,
             int fromValue,
             int toValue,
-            float duration = 0.5f
+            float duration = 0.5f,
+            Action onComplete = null
         ) {
             return DOTween.To(
                 getter: () => fromValue,
@@ -164,7 +165,8 @@ namespace Helpers {
                 },
                 toValue,
                 duration
-            ).SetEase(Ease.OutQuad);
+            ).SetEase(Ease.OutQuad)
+            .OnComplete(() => onComplete?.Invoke());
         }
         #endregion
     }

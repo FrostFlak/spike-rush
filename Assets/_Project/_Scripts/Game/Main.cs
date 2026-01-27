@@ -17,6 +17,7 @@ namespace Game {
         [SerializeField] private TapToPlayUI _tapToPlayUI;
         [SerializeField] private UpgradesUI _upgradesUI;
         [SerializeField] private CurrencyUI _currencyUI;
+        [SerializeField] private SettingsUI _settingsUI;
         [SerializeField] private EndUI _endUI;
         [Header("Storage")]
         [AlchemySerializeField, NonSerialized] public Dictionary<Models.CurrencyType, Sprite> CurrencyIcons;
@@ -36,7 +37,7 @@ namespace Game {
         public Models.Currency CurrencyData { get; private set; }
         public List<Models.Level> LevelsData { get; private set; }
         
-        public int CurrentDistance { get; set; }
+        public int CurrentTraversedDistance { get; set; }
         public int RunReceivedCoins { get; set; }
         public int RunReceivedDiamonds { get; set; }
         #endregion
@@ -49,13 +50,19 @@ namespace Game {
                 
             Load();
             Initialize();
+            StateManager.State.OnUpdate += OnGameStateChange;
+            CurrencyData.Coins.OnUpdate += OnCoinsChange;
+            CurrencyData.Diamonds.OnUpdate += OnDiamondsChange;
         }
-
+        
         protected override void OnDisable() {
             base.OnDisable();
 
             Save();
             Deinitialize();
+            StateManager.State.OnUpdate -= OnGameStateChange;
+            CurrencyData.Coins.OnUpdate -= OnCoinsChange;
+            CurrencyData.Diamonds.OnUpdate -= OnDiamondsChange;
         }
 
         private void Initialize() {
@@ -65,6 +72,7 @@ namespace Game {
             _tapToPlayUI.Initialize();
             _upgradesUI.Initialize(_shredderData);
             _currencyUI.Initialize();
+            _settingsUI.Initialize();
             _endUI.Initialize();
         }
         
@@ -75,6 +83,7 @@ namespace Game {
             _tapToPlayUI.Deinitialize();
             _upgradesUI.Deinitialize();
             _currencyUI.Deinitialize();
+            _settingsUI.Deinitialize();
             _endUI.Deinitialize();
         }
         #endregion
@@ -96,7 +105,7 @@ namespace Game {
                     Level = new Observable<int>(1),
                     Power = Constants.DefaultPower,
                     InvestedStep = new Observable<int>(0),
-                }
+                },
             };
             _shredderData = SavingSystem.GetOrCreate(Constants.ShredderSaveKey, defaultShredder);
 
@@ -125,6 +134,15 @@ namespace Game {
             SavingSystem.Save(CurrentLevelID, Constants.CurrentLvlIDSaveKey);
         }
         #endregion
+        
+        private void OnGameStateChange(StateManager.GameState arg1, StateManager.GameState state) {
+            if (state == StateManager.GameState.GatheredReward)
+                Save();
+        }
+        
+        private void OnCoinsChange(int arg1, int arg2) => Save();
+
+        private void OnDiamondsChange(int arg1, int arg2) => Save();
 
         #region DEBUG
         [Button]

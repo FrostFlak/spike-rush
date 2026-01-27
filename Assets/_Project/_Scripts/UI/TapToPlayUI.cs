@@ -40,9 +40,16 @@ namespace UI {
         }
 
         private void OnGameStateChange(StateManager.GameState arg1, StateManager.GameState state) {
-            _bg.raycastTarget = state is not StateManager.GameState.Playing;
-            _tapToPlayBtn.interactable = state is not StateManager.GameState.Playing;
-            _tapToPlayLabel.DOFade(state is StateManager.GameState.Playing ? 0f : 1f, FadeDuration);
+            if (state is StateManager.GameState.Playing) {
+                _bg.raycastTarget = false;
+                _tapToPlayBtn.interactable = false;
+                _tapToPlayLabel.DOFade(0f, FadeDuration);
+            }
+            else if (state is StateManager.GameState.GatheredReward) {
+                _bg.raycastTarget = true;
+                _tapToPlayBtn.interactable = true;
+                _tapToPlayLabel.DOFade(1f, FadeDuration);
+            }
         }
         #endregion
     }

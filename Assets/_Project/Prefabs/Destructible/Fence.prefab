@@ -1283,7 +1283,15 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 3332705192378880519}
     - target: {fileID: 2715221442997987128, guid: bd249d40107be6b4a8fe030272ce2544, type: 3}
+      propertyPath: _explosionForce
+      value: 15
+      objectReference: {fileID: 0}
+    - target: {fileID: 2715221442997987128, guid: bd249d40107be6b4a8fe030272ce2544, type: 3}
       propertyPath: _destructedRb.Array.size
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 2715221442997987128, guid: bd249d40107be6b4a8fe030272ce2544, type: 3}
+      propertyPath: <SpeedLoss>k__BackingField
       value: 10
       objectReference: {fileID: 0}
     - target: {fileID: 2715221442997987128, guid: bd249d40107be6b4a8fe030272ce2544, type: 3}
@@ -1326,6 +1334,14 @@ PrefabInstance:
       propertyPath: '_destructedRb.Array.data[9]'
       value: 
       objectReference: {fileID: 7360424231716938900}
+    - target: {fileID: 2715221442997987128, guid: bd249d40107be6b4a8fe030272ce2544, type: 3}
+      propertyPath: <CoinsPayout>k__BackingField
+      value: 15
+      objectReference: {fileID: 0}
+    - target: {fileID: 2715221442997987128, guid: bd249d40107be6b4a8fe030272ce2544, type: 3}
+      propertyPath: <HeatPenalty>k__BackingField
+      value: 3
+      objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 4218449007655226476, guid: bd249d40107be6b4a8fe030272ce2544, type: 3}
     m_RemovedGameObjects: []

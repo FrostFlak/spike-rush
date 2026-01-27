@@ -1,7 +1,6 @@
 ﻿using DG.Tweening;
 using Game;
 using TMPro;
-using Unity.Logging;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -10,7 +9,8 @@ namespace UI {
 
         #region SerializedFields
         [Header("RectTransforms")]
-        [SerializeField] private RectTransform _hudParent;
+        [SerializeField] private RectTransform _gameRect;
+        [SerializeField] private RectTransform _levelRect;
         [Header("UI")]
         [Header("Shredder")]
         [SerializeField] private TMP_Text _speedLabel;
@@ -29,10 +29,9 @@ namespace UI {
         #endregion
 
         #region PrivateFields
-        private const float GamePanelSlideDuration = .75f;
-        private const int DisabledYPosition = -350;
-        private const int EnabledYPosition = 350;
-        
+        private const float PanelSlideDuration = .75f;
+        private const int YHUDPosition = 350;
+        private const int YLvlPosition = -200;
         #endregion
 
         #region Initialization
@@ -42,17 +41,21 @@ namespace UI {
         }
 
         public void Deinitialize() {
-            _hudParent.DOKill();
+            _gameRect.DOKill();
             
             Main.Instance.StateManager.State.OnUpdate -= OnGameStateChange;
         }
         #endregion
 
         #region UI
-        private void SetGamePanelState(bool active) {
-            _hudParent.DOAnchorPosY(active ? EnabledYPosition : DisabledYPosition, GamePanelSlideDuration).SetEase(Ease.OutBounce);
+        private void SetHUDRectState(bool active) {
+            _gameRect.DOAnchorPosY(active ? YHUDPosition : -YHUDPosition, PanelSlideDuration).SetEase(Ease.OutBounce);
         }
         
+        private void SetLvlPanelState(bool active) {
+            _levelRect.DOAnchorPosY(active ? YLvlPosition : -YLvlPosition, PanelSlideDuration).SetEase(Ease.OutBounce);
+        }
+
         public void UpdateFuelUI(float currentFuel, float maxFuel) {
             var fuelDelta = currentFuel / maxFuel;
             _fuelBarFill.fillAmount = fuelDelta;
@@ -72,7 +75,7 @@ namespace UI {
         public void UpdateSpeedUI(int speed) => _speedLabel.SetText($"{speed} km/h");
 
         public void UpdateDistanceLabel() {
-            _lvlDistanceLabel.SetText($"{Main.Instance.CurrentDistance}m");
+            _lvlDistanceLabel.SetText($"{Main.Instance.CurrentTraversedDistance}m");
 
             TrySetNewRecordDistance();
         }
@@ -82,10 +85,10 @@ namespace UI {
             if (currentLvlData == null)
                 return;
 
-            if (currentLvlData.RecordDistance.Value() >= Main.Instance.CurrentDistance)
+            if (currentLvlData.RecordDistance.Value() >= Main.Instance.CurrentTraversedDistance)
                 return;
 
-            currentLvlData.RecordDistance.Set(Main.Instance.CurrentDistance);
+            currentLvlData.RecordDistance.Set(Main.Instance.CurrentTraversedDistance);
         }
 
         public void UpdateLvlProgressBar() {
@@ -93,7 +96,7 @@ namespace UI {
             var finish = Main.Instance.LevelManager.ActiveLevel.EndTransform;
             var totalDistance = Vector3.Distance(start.position, finish.position);
             
-            _lvlProgressBar.value = Main.Instance.CurrentDistance / totalDistance;
+            _lvlProgressBar.value = Main.Instance.CurrentTraversedDistance / totalDistance;
             
             var currentLvlData = Main.Instance.LevelsData[Main.Instance.CurrentLevelID - 1];
             if (currentLvlData == null)
@@ -107,10 +110,14 @@ namespace UI {
 
         #region Events
         private void OnGameStateChange(StateManager.GameState arg1, StateManager.GameState state) {
-            if (state is StateManager.GameState.Playing)
-                SetGamePanelState(true);
-            else if (state is StateManager.GameState.Win or StateManager.GameState.Lose)
-                SetGamePanelState(false);
+            if (state is StateManager.GameState.Playing) {
+                SetHUDRectState(true);
+                SetLvlPanelState(true);
+            }
+            else if (state is StateManager.GameState.GatheredReward) {
+                SetHUDRectState(false);
+                SetLvlPanelState(false);
+            }
         }
         #endregion
     }

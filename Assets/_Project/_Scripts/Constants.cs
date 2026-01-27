@@ -16,12 +16,14 @@ public static class Constants {
     public const int UpgradeDefaultPrice = 100;
     public const float DefaultAcceleration = 1f;
     public const float DefaultPower = 0.5f;
-    public const int DefaultFuel = 100;
+    public const int DefaultFuel = 50;
+    public const int DefaultMaxSpeed = 5;
     
     public const float UpgradePriceMultiplier = 1.15f;
-    public const float AccelerationUpgradeStep = 0.5f;
+    public const float AccelerationUpgradeStep = 0.15f;
     public const float PowerUpgradeStep = 0.5f;
-    public const int FuelUpgradeStep = 5;
+    public const int FuelUpgradeStep = 3;
+    public const float MaxSpeedMultiplier = 1.05f;
 
     public const int StepsToNewLevel = 3;
     #endregion
@@ -55,6 +57,17 @@ public static class Constants {
     }
     
     private static float GetTotalIncomeMultiplier(int totalUpgradeLevels) => IncomeBaseMultiplier + totalUpgradeLevels * LevelBonusStep;
-    public static int GetMoneyByDistance(int distance, int totalLevels) => Mathf.RoundToInt(distance * GetTotalIncomeMultiplier(totalLevels));
-    public static int GetMoneyByObject(int objectValue, int totalLevels) => Mathf.RoundToInt(objectValue * GetTotalIncomeMultiplier(totalLevels));
+    public static int GetCoinsByDistance(int distance, int levelDistance, int totalLevels) {
+        float baseReward = distance * 0.1f; 
+    
+        float progress = (float)distance / levelDistance;
+        float progressBonus = progress * 50f; // Например, до +50 монет за полный уровень
+    
+        float multiplier = GetTotalIncomeMultiplier(totalLevels);
+    
+        return Mathf.RoundToInt((baseReward + progressBonus) * multiplier);
+    }
+    public static int GetCoinsByObject(int objectValue, int totalLevels) => Mathf.RoundToInt(objectValue * GetTotalIncomeMultiplier(totalLevels));
+    
+    public static int GetMaxSpeedByAccelerationLvl(int level) => Mathf.RoundToInt(DefaultMaxSpeed + level * MaxSpeedMultiplier);
 }

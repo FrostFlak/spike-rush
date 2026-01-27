@@ -16,7 +16,7 @@ namespace Game {
         }
         
         private void SpawnLevel() {
-            if (ActiveLevel != null) 
+            if (ActiveLevel != null)
                 Object.Destroy(ActiveLevel.gameObject);
             
             var levelPb = Main.Instance.PredifinedLevelsPb[Main.Instance.CurrentLevelID];
@@ -34,6 +34,7 @@ namespace Game {
             }
             else if (state is StateManager.GameState.GatheredReward) {
                 Main.Instance.Shredder.ReturnToStart(ActiveLevel.StartTransform.position);
+                SpawnLevel();
             }
         }
     }

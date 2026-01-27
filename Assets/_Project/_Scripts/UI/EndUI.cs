@@ -36,6 +36,7 @@ namespace UI {
             
             _xButton.onClick.AddListener(OnClickTakeWithMultiplier);
             _takeBtn.onClick.AddListener(OnClickTake);
+            _diamondsLabel.gameObject.SetActive(false);
         }
 
         public void Deinitialize() {
@@ -103,8 +104,12 @@ namespace UI {
                 _levelReachedLabel.gameObject.SetActive(false);
             }
             
-            _coinsLabel.SetText(Main.Instance.RunReceivedCoins.ToString());
-            _diamondsLabel.SetText(Main.Instance.RunReceivedDiamonds.ToString());
+            _coinsLabel.LerpLabelCount(0, Main.Instance.RunReceivedCoins, onComplete: () => _coinsLabel.SetText($"+{_coinsLabel.text}"));
+            if (Main.Instance.RunReceivedDiamonds <= 0) 
+                return;
+            
+            _diamondsLabel.gameObject.SetActive(true);
+            _diamondsLabel.LerpLabelCount(0, Main.Instance.RunReceivedDiamonds, onComplete: () => _diamondsLabel.SetText($"+{_diamondsLabel.text}"));
         }
         #endregion
 
