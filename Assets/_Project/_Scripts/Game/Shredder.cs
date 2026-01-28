@@ -1,15 +1,22 @@
-﻿using Helpers;
+﻿using System;
+using System.Collections.Generic;
+using Alchemy.Serialization;
+using DG.Tweening;
+using Helpers;
 using UI;
 using UnityEngine;
 
 namespace Game {
-    public class Shredder : MonoBehaviour {
+    [AlchemySerialize]
+    public partial class Shredder : MonoBehaviour {
 
         #region SerializedFields
-        [field: Header("Components")]
-        [field: SerializeField] public Rigidbody Rigidbody { get; private set; }
+        [Header("Components")]
+        [SerializeField] private Rigidbody _rigidbody;
         [SerializeField] private Joystick _joystick;
         [SerializeField] private HUD _hud;
+        [AlchemySerializeField, NonSerialized] private Dictionary<int, GameObject> _spikeVisuals;
+        [SerializeField] private AudioSource _source;
         [Header("Properties")]
         [Header("Movement(m/s)")]
         [SerializeField] private float _breakingForce;
@@ -26,6 +33,7 @@ namespace Game {
         #region PrivateFields
         private const int MaxHeat = 100;
         private const float SideMovementMultiplier = 3.5f;
+        private const float BoostDuration = 2f;
         
         private Models.Shredder _shredderData;
         private ObjectPool<WorldSpacePayout> _worldSpacePayoutPool;
@@ -35,6 +43,7 @@ namespace Game {
         private float _currentHeatLevel;
         private bool _isOverheated;
         private bool _isActive;
+        private float _bonusSpeed;
         
         private bool CanMove => _currentFuel > 0 && !_isOverheated;
         #endregion
@@ -46,12 +55,15 @@ namespace Game {
             _hud.Initialize();
             
             Main.Instance.StateManager.State.OnUpdate += OnGameStateChange;
+            _shredderData.PowerData.Level.OnUpdate += OnPowerLevelChange;
+            SetSpikes(_shredderData.PowerData.Level.Value());
         }
 
         public void Deinitialize() {
             _hud.Deinitialize();
             
             Main.Instance.StateManager.State.OnUpdate -= OnGameStateChange;
+            _shredderData.PowerData.Level.OnUpdate -= OnPowerLevelChange;
         }
         #endregion
 
@@ -62,10 +74,10 @@ namespace Game {
             _currentHeatLevel = 0f;
             _isOverheated = false;
             _isActive = active;
-            Rigidbody.isKinematic = !active;
+            _rigidbody.isKinematic = !active;
         }
         
-        public void ReturnToStart(Vector3 position) => Rigidbody.position = position;
+        public void ReturnToStart(Vector3 position) => _rigidbody.position = position;
         #endregion
 
         #region Behaviour
@@ -75,7 +87,7 @@ namespace Game {
                 
                 _hud.UpdateFuelUI(_currentFuel, _shredderData.FuelData.Power);
                 _hud.UpdateHeatUI(_currentHeatLevel, MaxHeat, _isOverheated);
-                _hud.UpdateSpeedUI(Mathf.RoundToInt(Rigidbody.linearVelocity.magnitude * 3.6f));
+                _hud.UpdateSpeedUI(Mathf.RoundToInt(_rigidbody.linearVelocity.magnitude * 3.6f));
             }
 
             Main.Instance.CurrentTraversedDistance = Mathf.RoundToInt(Vector3.Distance(transform.position, Main.Instance.LevelManager.ActiveLevel.StartTransform.position));
@@ -87,8 +99,14 @@ namespace Game {
             if (!_isActive) 
                 return;
             
-            ApplyMovement();
+            int maxSpeed = Constants.GetMaxSpeedByAccelerationLvl(_shredderData.AccelerationData.Level.Value());
+            var effectiveMaxSpeed = maxSpeed + _bonusSpeed;
+            ApplyMovement(effectiveMaxSpeed);
             HandleFuelAndHeat();
+
+            var speed = _rigidbody.linearVelocity.z;
+            _source.volume = Mathf.Clamp(speed / effectiveMaxSpeed, 0f, .35f);
+            _source.pitch = Mathf.Lerp(0.9f, 1.12f, speed / effectiveMaxSpeed);
         }
         #endregion
 
@@ -102,7 +120,7 @@ namespace Game {
                 _currentHeatLevel = 0;
             }
 
-            if (_currentFuel <= 0 && Rigidbody.linearVelocity.magnitude <= 0.25f) 
+            if (_currentFuel <= 0 && _rigidbody.linearVelocity.magnitude <= 0.25f) 
                 Lose();
 
             _currentHeatLevel = Mathf.Clamp(_currentHeatLevel, 0, MaxHeat);
@@ -111,14 +129,14 @@ namespace Game {
         private void TriggerOverheat() {
             _isOverheated = true;
             _currentHeatLevel = MaxHeat;
-            Rigidbody.linearVelocity *= 0.8f;
+            _rigidbody.linearVelocity *= 0.8f;
         }
         
         private void Lose() {
             if (!_isActive) 
                 return;
             
-            Rigidbody.linearVelocity = Vector3.zero;
+            _rigidbody.linearVelocity = Vector3.zero;
             _isActive = false;
             Main.Instance.StateManager.FailLvl();
         }
@@ -132,12 +150,18 @@ namespace Game {
             return joystickInput.sqrMagnitude > 0.01f ? joystickInput.normalized : keyboardInput.normalized;
         }
         
-        private void ApplyMovement() {
+        public void ApplyBoost(float power, Vector3 direction) {
+            _bonusSpeed = power / 3.6f;
+            _rigidbody.AddForce(direction * power, ForceMode.Impulse);
+            DOTween.To(() => _bonusSpeed, x => _bonusSpeed = x, 0f, BoostDuration).SetEase(Ease.Linear);
+        }
+        
+        private void ApplyMovement(float effectiveMaxSpeed) {
             float moveVertical = _input.z;
             float moveHorizontal = _input.x;
             Vector3 movement = new Vector3(moveHorizontal, 0, moveVertical).normalized;
     
-            float currentZVelocity = Rigidbody.linearVelocity.z;
+            float currentZVelocity = _rigidbody.linearVelocity.z;
 
             if (CanMove && movement.sqrMagnitude > 0.01f) {
                 float finalMoveForce = _shredderData.AccelerationData.Power;
@@ -147,8 +171,8 @@ namespace Game {
                 if (isReversing)
                     finalMoveForce *= _breakingForce;
 
-                Rigidbody.AddForce(Vector3.forward * moveVertical * finalMoveForce, ForceMode.Acceleration);
-                Rigidbody.AddForce(Vector3.right * moveHorizontal * _shredderData.AccelerationData.Power * SideMovementMultiplier, ForceMode.Acceleration);
+                _rigidbody.AddForce(Vector3.forward * moveVertical * finalMoveForce, ForceMode.Acceleration);
+                _rigidbody.AddForce(Vector3.right * moveHorizontal * _shredderData.AccelerationData.Power * SideMovementMultiplier, ForceMode.Acceleration);
 
                 _currentFuel -= _fuelConsumptionRate * Time.fixedDeltaTime;
                 _currentHeatLevel += _heatRate * Time.fixedDeltaTime;
@@ -157,12 +181,11 @@ namespace Game {
                     TriggerOverheat();
             } 
             else {
-                if (Rigidbody.linearVelocity.magnitude > 0.1f)
-                    Rigidbody.AddForce(-Rigidbody.linearVelocity.normalized * _stoppingForce, ForceMode.Acceleration);
+                if (_rigidbody.linearVelocity.magnitude > 0.1f)
+                    _rigidbody.AddForce(-_rigidbody.linearVelocity.normalized * _stoppingForce, ForceMode.Acceleration);
             }
-
-            int maxSpeed = Constants.GetMaxSpeedByAccelerationLvl(_shredderData.AccelerationData.Level.Value());
-            Rigidbody.linearVelocity = Vector3.ClampMagnitude(Rigidbody.linearVelocity, maxSpeed);
+            
+            _rigidbody.linearVelocity = Vector3.ClampMagnitude(_rigidbody.linearVelocity, effectiveMaxSpeed);
         }
         #endregion
 
@@ -181,11 +204,26 @@ namespace Game {
         }
 
         private void ApplyImpact(float loss, float heat) {
-            Rigidbody.linearVelocity *= (1f - loss);
+            _rigidbody.linearVelocity *= (1f - loss);
             
             _currentHeatLevel += heat;
             if (_currentHeatLevel >= MaxHeat) 
                 TriggerOverheat();
+        }
+        #endregion
+
+        #region Spikes
+        private void SetSpikes(int lvl) {
+            for (int i = 1; i <= lvl; i++) {
+                if (_spikeVisuals[i] == null)
+                    continue;
+                
+                if (_spikeVisuals[i].activeInHierarchy)
+                    continue;
+                
+                _spikeVisuals[i].SetActive(true);
+                _spikeVisuals[i].transform.DOScale(Vector3.one, 1f).From(Vector3.zero).SetEase(Ease.InOutBounce);
+            } 
         }
         #endregion
         
@@ -203,6 +241,10 @@ namespace Game {
                     SetShredderState(true);
                     break;
             }
+        }
+        
+        private void OnPowerLevelChange(int arg1, int lvl) {
+            SetSpikes(lvl);
         }
         #endregion
     }

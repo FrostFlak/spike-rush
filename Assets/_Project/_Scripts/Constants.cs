@@ -7,16 +7,17 @@ public static class Constants {
     public const string CurrencySaveKey = "currency";
     public const string LevelsSaveKey = "levels";
     public const string CurrentLvlIDSaveKey = "currentLvlId";
+    public const string SettingsSaveKey = "settings";
     #endregion
 
     #region Upgrades
     private const float IncomeBaseMultiplier = 1.0f; 
     private const float LevelBonusStep = 0.05f;
     
-    public const int UpgradeDefaultPrice = 100;
+    public const int UpgradeDefaultPrice = 75;
     public const float DefaultAcceleration = 1f;
     public const float DefaultPower = 0.5f;
-    public const int DefaultFuel = 50;
+    public const int DefaultFuel = 75;
     public const int DefaultMaxSpeed = 5;
     
     public const float UpgradePriceMultiplier = 1.15f;

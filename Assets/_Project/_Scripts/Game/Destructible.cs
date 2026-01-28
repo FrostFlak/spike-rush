@@ -11,6 +11,7 @@ namespace Game {
         [SerializeField] private Collider _collider;
         [SerializeField] private List<Rigidbody> _destructedRb;
         [Header("Properties")]
+        [SerializeField] private AudioController.BreakSFX _breakSfxType;
         [SerializeField, Range(1, 99)] private float _explosionForce = 5f;
         [field: SerializeField, Range(1, 99)] public float SpeedLoss { get; private set; }
         [field: SerializeField, Range(1, 99)] public float HeatPenalty { get; private set; }
@@ -43,6 +44,8 @@ namespace Game {
                 rb.AddTorque(Random.insideUnitSphere * _explosionForce, ForceMode.Impulse);
             }
 
+            AudioController.Instance.PlayBreak(_breakSfxType, true);
+            
             Destroy(_destructed, 2f);
             Destroy(gameObject, 3f);
         }

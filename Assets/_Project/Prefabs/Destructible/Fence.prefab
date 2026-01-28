@@ -1283,6 +1283,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 3332705192378880519}
     - target: {fileID: 2715221442997987128, guid: bd249d40107be6b4a8fe030272ce2544, type: 3}
+      propertyPath: _breakSfxType
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 2715221442997987128, guid: bd249d40107be6b4a8fe030272ce2544, type: 3}
       propertyPath: _explosionForce
       value: 15
       objectReference: {fileID: 0}
@@ -1336,7 +1340,7 @@ PrefabInstance:
       objectReference: {fileID: 7360424231716938900}
     - target: {fileID: 2715221442997987128, guid: bd249d40107be6b4a8fe030272ce2544, type: 3}
       propertyPath: <CoinsPayout>k__BackingField
-      value: 15
+      value: 20
       objectReference: {fileID: 0}
     - target: {fileID: 2715221442997987128, guid: bd249d40107be6b4a8fe030272ce2544, type: 3}
       propertyPath: <HeatPenalty>k__BackingField

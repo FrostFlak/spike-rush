@@ -57,7 +57,7 @@ CapsuleCollider:
   m_Radius: 0.2
   m_Height: 1
   m_Direction: 1
-  m_Center: {x: 0, y: -0.35, z: -2.2341924}
+  m_Center: {x: 0, y: -0.35, z: 0}
 --- !u!114 &2715221442997987128
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -73,10 +73,12 @@ MonoBehaviour:
   _nonDestructed: {fileID: 5874096244018908633}
   _destructed: {fileID: 2625178154413918734}
   _collider: {fileID: 4218449007655226476}
+  _destructedRb: []
+  _breakSfxType: 0
   _explosionForce: 10
   <SpeedLoss>k__BackingField: 5
   <HeatPenalty>k__BackingField: 1
-  <MoneyPayout>k__BackingField: 15
+  <CoinsPayout>k__BackingField: 0
 --- !u!1 &2625178154413918734
 GameObject:
   m_ObjectHideFlags: 0

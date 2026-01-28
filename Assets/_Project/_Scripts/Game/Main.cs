@@ -26,7 +26,7 @@ namespace Game {
 
         #region PrivateFields
         private Models.Shredder _shredderData;
-
+        private Models.Settings _settingsData;
         #endregion
         
         #region Properties
@@ -72,7 +72,7 @@ namespace Game {
             _tapToPlayUI.Initialize();
             _upgradesUI.Initialize(_shredderData);
             _currencyUI.Initialize();
-            _settingsUI.Initialize();
+            _settingsUI.Initialize(_settingsData);
             _endUI.Initialize();
         }
         
@@ -125,6 +125,13 @@ namespace Game {
             }
             LevelsData = SavingSystem.GetOrCreate(Constants.LevelsSaveKey, defaultLevels);
             CurrentLevelID = SavingSystem.GetOrCreate(Constants.CurrentLvlIDSaveKey, 1);
+
+            var defaultSettings = new Models.Settings {
+                SfxActive = new Observable<bool>(true),
+                MusicActive = new Observable<bool>(true),
+                HighFpsActive = new Observable<bool>(true),
+            };
+            _settingsData = SavingSystem.GetOrCreate(Constants.SettingsSaveKey, defaultSettings);
         }
 
         private void Save() {
@@ -132,6 +139,7 @@ namespace Game {
             SavingSystem.Save(CurrencyData, Constants.CurrencySaveKey);
             SavingSystem.Save(LevelsData, Constants.LevelsSaveKey);
             SavingSystem.Save(CurrentLevelID, Constants.CurrentLvlIDSaveKey);
+            SavingSystem.Save(_settingsData, Constants.SettingsSaveKey);
         }
         #endregion
         
