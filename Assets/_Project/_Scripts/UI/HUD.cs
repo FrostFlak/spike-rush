@@ -15,16 +15,14 @@ namespace UI {
         [Header("Shredder")]
         [SerializeField] private TMP_Text _speedLabel;
         [SerializeField] private TMP_Text _fuelLabel;
-        [SerializeField] private TMP_Text _heatLabel;
         [SerializeField] private Image _fuelBarFill;
-        [SerializeField] private Image _heatBarFill;
+        [SerializeField] private TMP_Text _lowFuelWarnLabel;
         [Header("LevelProgress")]
         [SerializeField] private Slider _lvlProgressBar;
+        [SerializeField] private TMP_Text _lvlLabel;
         [SerializeField] private TMP_Text _lvlDistanceLabel;
         [SerializeField] private Image _recordMarker;
         [Header("Properties")]
-        [SerializeField] private Gradient _heatingGradient;
-        [SerializeField] private Gradient _coolingGradient;
         [SerializeField] private Gradient _fuelGradient;
         #endregion
 
@@ -32,16 +30,22 @@ namespace UI {
         private const float PanelSlideDuration = .75f;
         private const int YHUDPosition = 350;
         private const int YLvlPosition = -200;
+        
+        private Tween _lowFuelTween;
         #endregion
 
         #region Initialization
         public void Initialize() {
             Main.Instance.StateManager.State.OnUpdate += OnGameStateChange;
             UpdateLvlProgressBar();
+            
+            SetLevelLabel();
+            _lowFuelWarnLabel.alpha = 0f;
         }
 
         public void Deinitialize() {
             _gameRect.DOKill();
+            _lowFuelTween?.Kill();
             
             Main.Instance.StateManager.State.OnUpdate -= OnGameStateChange;
         }
@@ -62,16 +66,26 @@ namespace UI {
             _fuelBarFill.color = _fuelGradient.Evaluate(fuelDelta);
             
             _fuelLabel.SetText($"{currentFuel:N0}/{maxFuel:N0}");
+            if (fuelDelta < 0.25f && fuelDelta > 0) {
+                bool isActive = _lowFuelTween != null && _lowFuelTween.IsActive() && _lowFuelTween.IsPlaying();
+
+                if (isActive) 
+                    return;
+                
+                _lowFuelWarnLabel.alpha = 0; 
+                _lowFuelTween = _lowFuelWarnLabel.DOFade(1f, 0.5f)
+                    .SetLoops(-1, LoopType.Yoyo)
+                    .SetEase(Ease.InOutSine);
+            }
+            else {
+                if (_lowFuelTween != null && _lowFuelTween.IsActive()) 
+                    _lowFuelTween.Kill();
+                
+                _lowFuelTween = null;
+                _lowFuelWarnLabel.alpha = 0; 
+            }
         }
         
-        public void UpdateHeatUI(float currentHeatLevel, float maxHeat, bool isOverheated) {
-            var heatDelta = currentHeatLevel / maxHeat;
-            _heatBarFill.fillAmount = heatDelta;
-            _heatBarFill.color = isOverheated ? _coolingGradient.Evaluate(heatDelta) : _heatingGradient.Evaluate(heatDelta);
-            
-            _heatLabel.SetText($"{currentHeatLevel:N0}/{maxHeat:N0}");
-        }
-
         public void UpdateSpeedUI(int speed) => _speedLabel.SetText($"{speed} km/h");
 
         public void UpdateDistanceLabel() {
@@ -90,6 +104,8 @@ namespace UI {
 
             currentLvlData.RecordDistance.Set(Main.Instance.CurrentTraversedDistance);
         }
+
+        private void SetLevelLabel() => _lvlLabel.SetText($"Level {Main.Instance.CurrentLevelID}");
 
         public void UpdateLvlProgressBar() {
             var start = Main.Instance.LevelManager.ActiveLevel.StartTransform;
@@ -117,6 +133,7 @@ namespace UI {
             else if (state is StateManager.GameState.GatheredReward) {
                 SetHUDRectState(false);
                 SetLvlPanelState(false);
+                SetLevelLabel();
             }
         }
         #endregion

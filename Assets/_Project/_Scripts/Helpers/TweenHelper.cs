@@ -53,6 +53,28 @@ namespace Helpers {
                 elasticity
             );
         }
+        
+        public static Tween JiggleZRotation(this RectTransform rect, float angle = 10f, float duration = 0.4f, int loops = 3) => rect.transform.JiggleZRotation(angle, duration, loops);
+
+        public static Tween JiggleZRotation(
+            this Transform transform,
+            float angle = 10f,
+            float duration = 0.4f,
+            int loops = 3
+        ) {
+            transform.DOKill();
+            var startRotation = transform.localEulerAngles;
+
+            return DOTween.Sequence()
+                .Append(transform.DORotate(new Vector3(startRotation.x, startRotation.y, startRotation.z + angle), duration / 3f)
+                    .SetEase(Ease.InOutSine))
+                .Append(transform.DORotate(new Vector3(startRotation.x, startRotation.y, startRotation.z - angle), duration / 3f)
+                    .SetEase(Ease.InOutSine))
+                .Append(transform.DORotate(startRotation, duration / 3f)
+                    .SetEase(Ease.InOutSine))
+                .SetLoops(loops, LoopType.Restart)
+                .OnKill(() => transform.localEulerAngles = startRotation);
+        }
         #endregion
 
         #region Graphic

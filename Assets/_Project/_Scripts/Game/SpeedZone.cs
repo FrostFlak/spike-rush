@@ -12,6 +12,7 @@ namespace Game {
 
             Vector3 direction = _boost ? Vector3.forward : Vector3.back;
             shredder.ApplyBoost(_forcePower, direction);
+            AudioController.Instance.PlayEnvironment(AudioController.EnvironmentSFX.BoostPlatform);
         }
     }
 }

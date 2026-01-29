@@ -40,6 +40,7 @@ namespace Game {
         public int CurrentTraversedDistance { get; set; }
         public int RunReceivedCoins { get; set; }
         public int RunReceivedDiamonds { get; set; }
+        public Observable<int> LastRecordDistance { get; private set; }
         #endregion
 
         #region Behaviour
@@ -67,6 +68,7 @@ namespace Game {
 
         private void Initialize() {
             LevelManager = new LevelManager();
+            LastRecordDistance = new Observable<int>(LevelsData[CurrentLevelID - 1].RecordDistance.Value());
             
             Shredder.Initialize(_shredderData);
             _tapToPlayUI.Initialize();
@@ -144,8 +146,15 @@ namespace Game {
         #endregion
         
         private void OnGameStateChange(StateManager.GameState arg1, StateManager.GameState state) {
-            if (state == StateManager.GameState.GatheredReward)
+            if (state is StateManager.GameState.Win or StateManager.GameState.Lose) {
+                if (LastRecordDistance.Value() >= CurrentTraversedDistance)
+                    return;
+                
+                LastRecordDistance.Set(CurrentTraversedDistance);
+            }
+            else if (state is StateManager.GameState.GatheredReward) {
                 Save();
+            }
         }
         
         private void OnCoinsChange(int arg1, int arg2) => Save();
@@ -155,6 +164,9 @@ namespace Game {
         #region DEBUG
         [Button]
         private void GiveCoins(int amount) => CurrencyData.Add(Models.CurrencyType.Coin, amount);
+        
+        [Button]
+        private void SpendCoins(int amount) => CurrencyData.Subtract(Models.CurrencyType.Coin, amount);
         
         [Button]
         private void GiveDiamonds(int amount) => CurrencyData.Add(Models.CurrencyType.Diamond, amount);

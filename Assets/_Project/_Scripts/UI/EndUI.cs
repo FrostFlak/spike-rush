@@ -19,6 +19,7 @@ namespace UI {
         [Header("Labels")]
         [SerializeField] private TMP_Text _outOfFuelLabel;
         [SerializeField] private TMP_Text _levelReachedLabel;
+        [SerializeField] private TMP_Text _newRecordLabel;
         [SerializeField] private TMP_Text _coinsLabel;
         [SerializeField] private TMP_Text _diamondsLabel;
         #endregion
@@ -33,16 +34,19 @@ namespace UI {
         #region Initialization
         public void Initialize() {
             Main.Instance.StateManager.State.OnUpdate += OnGameStateChange;
+            Main.Instance.LastRecordDistance.OnUpdate += OnLastRecordDistanceChange;
             
             _xButton.onClick.AddListener(OnClickTakeWithMultiplier);
             _takeBtn.onClick.AddListener(OnClickTake);
             _diamondsLabel.gameObject.SetActive(false);
+            _newRecordLabel.alpha = 0f;
         }
-
+        
         public void Deinitialize() {
             _fadePanel.DOKill();
             
             Main.Instance.StateManager.State.OnUpdate -= OnGameStateChange;
+            Main.Instance.LastRecordDistance.OnUpdate -= OnLastRecordDistanceChange;
             
             _xButton.onClick.RemoveAllListeners();
             _takeBtn.onClick.RemoveAllListeners();
@@ -104,12 +108,14 @@ namespace UI {
                 _levelReachedLabel.gameObject.SetActive(false);
             }
             
-            _coinsLabel.LerpLabelCount(0, Main.Instance.RunReceivedCoins, onComplete: () => _coinsLabel.SetText($"+{_coinsLabel.text}"));
+            _coinsLabel.LerpLabelCount(0, Main.Instance.RunReceivedCoins, duration: 1f, onComplete: () => _coinsLabel.SetText($"+{_coinsLabel.text}"));
+            AudioController.Instance.PlayUI(AudioController.UISFX.MultipleCoins);
+            
             if (Main.Instance.RunReceivedDiamonds <= 0) 
                 return;
             
             _diamondsLabel.gameObject.SetActive(true);
-            _diamondsLabel.LerpLabelCount(0, Main.Instance.RunReceivedDiamonds, onComplete: () => _diamondsLabel.SetText($"+{_diamondsLabel.text}"));
+            _diamondsLabel.LerpLabelCount(0, Main.Instance.RunReceivedDiamonds, duration: 1f, onComplete: () => _diamondsLabel.SetText($"+{_diamondsLabel.text}"));
         }
         #endregion
 
@@ -117,7 +123,11 @@ namespace UI {
         private void OnGameStateChange(StateManager.GameState arg1, StateManager.GameState state) {
             if (state is StateManager.GameState.Lose or StateManager.GameState.Win)
                 SetState(true);
+            else if (state is StateManager.GameState.GatheredReward) 
+                _newRecordLabel.alpha = 0f;
         }
+        
+        private void OnLastRecordDistanceChange(int arg1, int arg2) => _newRecordLabel.alpha = 1f;
         #endregion
     }
 }

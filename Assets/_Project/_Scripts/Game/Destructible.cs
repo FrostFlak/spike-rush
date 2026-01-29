@@ -14,7 +14,6 @@ namespace Game {
         [SerializeField] private AudioController.BreakSFX _breakSfxType;
         [SerializeField, Range(1, 99)] private float _explosionForce = 5f;
         [field: SerializeField, Range(1, 99)] public float SpeedLoss { get; private set; }
-        [field: SerializeField, Range(1, 99)] public float HeatPenalty { get; private set; }
         [field: SerializeField] public int CoinsPayout { get; private set; }
         #endregion
 
@@ -22,7 +21,8 @@ namespace Game {
         private void OnEnable() {
             _destructed.SetActive(false);
             _nonDestructed.SetActive(true);
-            foreach (var rb in _destructedRb) 
+            
+            foreach (var rb in _destructedRb)
                 rb.isKinematic = true;
         }
         #endregion

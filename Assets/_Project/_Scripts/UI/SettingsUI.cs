@@ -41,9 +41,9 @@ namespace UI {
             _restartLvlBtn.onClick.AddListener(StopLevel);
             _closePanelBtn.ForEach(b => b.onClick.AddListener(() => SetSettingsPanelState(false)));
             
-            _sfxToggle.onValueChanged.AddListener(OnSfxToggleClick);
-            _musicToggle.onValueChanged.AddListener(OnMusicToggleClick);
-            _highFpsToggle.onValueChanged.AddListener(OnLowFpsToggleClick);
+            _sfxToggle.onValueChanged.AddListener(OnSfxToggleValueChanged);
+            _musicToggle.onValueChanged.AddListener(OnMusicToggleValueChanged);
+            _highFpsToggle.onValueChanged.AddListener(OnLowFpsToggleValueChanged);
             SetTogglesState();
         }
 
@@ -75,6 +75,7 @@ namespace UI {
 
         #region UI
         private void StopLevel() {
+            AudioController.Instance.PlayUI(AudioController.UISFX.PopClick, true);
             Main.Instance.StateManager.State.Set(StateManager.GameState.Lose);
         }
         
@@ -94,19 +95,24 @@ namespace UI {
                         _settingsPanel.gameObject.SetActive(false);
                 }
             );
+            
+            AudioController.Instance.PlayUI(AudioController.UISFX.PopClick, true);
         }
         #endregion
 
         #region Events
-        private void OnSettingsToggleChange(bool arg1, bool arg2) => SetTogglesState();
+        private void OnSettingsToggleChange(bool arg1, bool arg2) {
+            SetTogglesState();
+            AudioController.Instance?.PlayUI(AudioController.UISFX.Switch, true);
+        }
 
         private void OnGameStateChange(StateManager.GameState _, StateManager.GameState state) => _restartLvlBtn.gameObject.SetActive(state is StateManager.GameState.Playing);
         
-        private void OnSfxToggleClick(bool active) => _settingsData.SfxActive.Set(active);
-        
-        private void OnMusicToggleClick(bool active) => _settingsData.MusicActive.Set(active);
-        
-        private void OnLowFpsToggleClick(bool active) => _settingsData.HighFpsActive.Set(active);
+        private void OnSfxToggleValueChanged(bool active) => _settingsData.SfxActive.Set(active);
+
+        private void OnMusicToggleValueChanged(bool active) => _settingsData.MusicActive.Set(active);
+
+        private void OnLowFpsToggleValueChanged(bool active) => _settingsData.HighFpsActive.Set(active);
         #endregion
     }
 }

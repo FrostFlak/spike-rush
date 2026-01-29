@@ -10,27 +10,34 @@ public static class Constants {
     public const string SettingsSaveKey = "settings";
     #endregion
 
-    #region Upgrades
-    private const float IncomeBaseMultiplier = 1.0f; 
-    private const float LevelBonusStep = 0.05f;
+    #region Income
+    private const float IncomeBaseMultiplier = 1f;
+    private const float LevelBonusStep = 0.1f;
+    #endregion
     
+    #region DefaultValues
     public const int UpgradeDefaultPrice = 75;
     public const float DefaultAcceleration = 1f;
-    public const float DefaultPower = 0.5f;
+    public const float DefaultPower = 1f;
     public const int DefaultFuel = 75;
     public const int DefaultMaxSpeed = 5;
-    
-    public const float UpgradePriceMultiplier = 1.15f;
-    public const float AccelerationUpgradeStep = 0.15f;
-    public const float PowerUpgradeStep = 0.5f;
-    public const int FuelUpgradeStep = 3;
-    public const float MaxSpeedMultiplier = 1.05f;
+    #endregion
 
+    #region Multipliers
+    public const float UpgradePriceMultiplier = 1.175f;
+    public const float MaxSpeedMultiplier = 1.035f;
+    public const float AccelerationUpgradeStep = 0.15f;
+    public const float PowerUpgradeStep = 0.12f;
+    public const int FuelUpgradeStep = 3;
+    #endregion
+    
+    #region Limits
+    public const float MaxSpeedLimit = 13.75f;
     public const int StepsToNewLevel = 3;
     #endregion
     
     public const int CoinsToDiamondsRate = 150;
-    public const float UpgradeInDiamondsDiscount = 0.75f;
+    public const float UpgradeInDiamondsDiscount = 0.5f;
 
     public static int GetPriceForUpgrade(int level) {
         float rawPrice = UpgradeDefaultPrice * Mathf.Pow(UpgradePriceMultiplier, level - 1);
@@ -69,6 +76,6 @@ public static class Constants {
         return Mathf.RoundToInt((baseReward + progressBonus) * multiplier);
     }
     public static int GetCoinsByObject(int objectValue, int totalLevels) => Mathf.RoundToInt(objectValue * GetTotalIncomeMultiplier(totalLevels));
-    
-    public static int GetMaxSpeedByAccelerationLvl(int level) => Mathf.RoundToInt(DefaultMaxSpeed + level * MaxSpeedMultiplier);
+
+    public static int GetMaxSpeedByAccelerationLvl(int level) => Mathf.RoundToInt(Mathf.Clamp(DefaultMaxSpeed * Mathf.Pow(MaxSpeedMultiplier, level - 1),DefaultMaxSpeed, MaxSpeedLimit));
 }

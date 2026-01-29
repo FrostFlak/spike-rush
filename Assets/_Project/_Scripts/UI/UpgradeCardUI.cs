@@ -4,6 +4,7 @@ using System.Linq;
 using Alchemy.Serialization;
 using DG.Tweening;
 using Game;
+using Helpers;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -23,7 +24,7 @@ namespace UI {
         
         private Models.UpgradeData _upgradeData;
         private float _powerStep;
-        private Tweener _stepUpgradeTween;
+        private Tween _stepUpgradeTween;
 
         #region Initialization
         public void Initialize(Models.UpgradeData upgradeData, float powerStep) {
@@ -69,8 +70,8 @@ namespace UI {
                 _priceLabel.SetText(coinsPriceForUpgrade.ToString());
             }
             
-            var hasEnoughMoney = Main.Instance.CurrencyData.Coins.Value() >= coinsPriceForUpgrade || Main.Instance.CurrencyData.Diamonds.Value() >= diamondsPriceForUpgrade;
-            _upgradeBtn.ForEach(b => b.interactable = hasEnoughMoney);
+            // var hasEnoughMoney = Main.Instance.CurrencyData.Coins.Value() >= coinsPriceForUpgrade || Main.Instance.CurrencyData.Diamonds.Value() >= diamondsPriceForUpgrade;
+            // _upgradeBtn.ForEach(b => b.interactable = hasEnoughMoney);
         }
         
         private void SetButtons() {
@@ -88,22 +89,28 @@ namespace UI {
             var coinsPriceForUpgrade = Constants.GetPriceForUpgrade(_upgradeData.Level.Value());
             var diamondsPriceForUpgrade = Constants.GetPriceForUpgradeInDiamonds(_upgradeData.Level.Value());
             if (Main.Instance.CurrencyData.Coins.Value() < coinsPriceForUpgrade) {
-                if (!Main.Instance.CurrencyData.Subtract(Models.CurrencyType.Diamond, diamondsPriceForUpgrade)) 
+                if (!Main.Instance.CurrencyData.Subtract(Models.CurrencyType.Diamond, diamondsPriceForUpgrade)) {
+                    FailStepUpgrade();
                     return;
+                }
                 
                 _upgradeData.Upgrade(_powerStep);
-                AnimationStepUpgrade();
+                SuccessStepUpgrade();
+                AudioController.Instance.PlayUI(AudioController.UISFX.Upgrade, true);
             }
             else {
-                if (!Main.Instance.CurrencyData.Subtract(Models.CurrencyType.Coin, coinsPriceForUpgrade)) 
+                if (!Main.Instance.CurrencyData.Subtract(Models.CurrencyType.Coin, coinsPriceForUpgrade)) {
+                    FailStepUpgrade();
                     return;
+                } 
                 
                 _upgradeData.Upgrade(_powerStep);
-                AnimationStepUpgrade();
+                SuccessStepUpgrade();
+                AudioController.Instance.PlayUI(AudioController.UISFX.Upgrade, true);
             }
         }
 
-        private void AnimationStepUpgrade() {
+        private void SuccessStepUpgrade() {
             _stepUpgradeTween?.Kill(true);
             _stepUpgradeTween = transform
                 .DOPunchScale(new Vector3(0.25f, 0.35f, 0.25f), 0.3f, 3, 0.15f)
@@ -111,6 +118,11 @@ namespace UI {
                 .OnComplete(() => {
                     transform.localScale = Vector3.one;
                 });
+        }
+        
+        private void FailStepUpgrade() {
+            _stepUpgradeTween?.Kill(true);
+            _stepUpgradeTween = transform.JiggleZRotation(loops: 1);
         }
         #endregion
 
