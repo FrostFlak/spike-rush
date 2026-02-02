@@ -1,4 +1,5 @@
-﻿using DG.Tweening;
+﻿using System.Linq;
+using DG.Tweening;
 using Game;
 using TMPro;
 using UnityEngine;
@@ -95,7 +96,7 @@ namespace UI {
         }
 
         private void TrySetNewRecordDistance() {
-            var currentLvlData = Main.Instance.LevelsData[Main.Instance.CurrentLevelID - 1];
+            var currentLvlData = Main.Instance.LevelsData.FirstOrDefault(lvl => lvl.ID == Main.Instance.CurrentLevelID.Value());
             if (currentLvlData == null)
                 return;
 
@@ -105,16 +106,20 @@ namespace UI {
             currentLvlData.RecordDistance.Set(Main.Instance.CurrentTraversedDistance);
         }
 
-        private void SetLevelLabel() => _lvlLabel.SetText($"Level {Main.Instance.CurrentLevelID}");
+        private void SetLevelLabel() => _lvlLabel.SetText($"Level {Main.Instance.CurrentLevelID.Value()}");
 
         public void UpdateLvlProgressBar() {
-            var start = Main.Instance.LevelManager.ActiveLevel.StartTransform;
-            var finish = Main.Instance.LevelManager.ActiveLevel.EndTransform;
+            var activeLvl = Main.Instance.LevelManager.ActiveLevel;
+            if (activeLvl == null)
+                return;
+            
+            var start = activeLvl.StartTransform;
+            var finish = activeLvl.EndTransform;
             var totalDistance = Vector3.Distance(start.position, finish.position);
             
             _lvlProgressBar.value = Main.Instance.CurrentTraversedDistance / totalDistance;
             
-            var currentLvlData = Main.Instance.LevelsData[Main.Instance.CurrentLevelID - 1];
+            var currentLvlData = Main.Instance.LevelsData.FirstOrDefault(lvl => lvl.ID == Main.Instance.CurrentLevelID.Value());
             if (currentLvlData == null)
                 return;
 

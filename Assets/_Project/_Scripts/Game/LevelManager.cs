@@ -1,4 +1,5 @@
-﻿using Unity.Logging;
+﻿using System.Linq;
+using Unity.Logging;
 using UnityEngine;
 
 namespace Game {
@@ -19,17 +20,20 @@ namespace Game {
             if (ActiveLevel != null)
                 Object.Destroy(ActiveLevel.gameObject);
             
-            var levelPb = Main.Instance.PredifinedLevelsPb[Main.Instance.CurrentLevelID];
+            if (!Main.Instance.PredifinedLevelsPb.TryGetValue(Main.Instance.CurrentLevelID.Value(), out var levelPb))
+                return;
             
             ActiveLevel = Object.Instantiate(levelPb, Vector3.zero, Quaternion.identity);
             Main.Instance.Shredder.ReturnToStart(ActiveLevel.StartTransform.position);
-            Log.Debug($"Spawned level: [{Main.Instance.CurrentLevelID}]");
+            Log.Debug($"Spawned level: [{Main.Instance.CurrentLevelID.Value()}]");
         }
         
         private void OnGameStateChange(StateManager.GameState oldState, StateManager.GameState state) {
             if (oldState is StateManager.GameState.Win && state is StateManager.GameState.GatheredReward) {
-                Main.Instance.LevelsData[Main.Instance.CurrentLevelID].IsReached.Set(true);
-                Main.Instance.CurrentLevelID++;
+                var lvl = Main.Instance.LevelsData.FirstOrDefault(l => l.ID == Main.Instance.CurrentLevelID.Value());
+                lvl?.IsReached.Set(true);
+                Main.Instance.CurrentLevelID.Set(Main.Instance.CurrentLevelID.Value() + 1);
+
                 SpawnLevel();
             }
             else if (state is StateManager.GameState.GatheredReward) {

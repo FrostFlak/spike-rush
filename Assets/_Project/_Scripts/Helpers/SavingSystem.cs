@@ -1,5 +1,5 @@
 using System;
-using UnityEngine;
+using Helpers.SDK;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
@@ -33,7 +33,7 @@ namespace Helpers {
                 string json = JsonConvert.SerializeObject(data);
                 string prefsKey = PREFS_PREFIX + key;
 
-                PlayerPrefs.SetString(prefsKey, json);
+                SDKController.Instance.SDK.SetString(prefsKey, json);
 
                 // Optional: very verbose logging for debug builds
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
@@ -48,35 +48,34 @@ namespace Helpers {
         public static T Load<T>(string key, T defaultValue = default) {
             string prefsKey = PREFS_PREFIX + key;
 
-            if (!PlayerPrefs.HasKey(prefsKey)) {
+            if (!SDKController.Instance.SDK.HasKey(prefsKey))
                 return defaultValue;
-            }
 
             try {
-                string json = PlayerPrefs.GetString(prefsKey);
+                string json = SDKController.Instance.SDK.GetString(prefsKey);
                 T data = JsonConvert.DeserializeObject<T>(json);
                 return data;
             }
-            catch (System.Exception ex)
-            {
+            catch (System.Exception ex) {
                 Log.Error($"Failed to load '{key}': {ex.Message}\nData may be corrupted → using default");
                 return defaultValue;
             }
         }
 
-        public static bool Exists(string key) => PlayerPrefs.HasKey(PREFS_PREFIX + key);
+        public static bool Exists(string key) => SDKController.Instance.SDK.HasKey(PREFS_PREFIX + key);
 
         public static void Delete(string key) {
             string prefsKey = PREFS_PREFIX + key;
-            if (PlayerPrefs.HasKey(prefsKey))
+            if (SDKController.Instance.SDK.HasKey(prefsKey))
             {
-                PlayerPrefs.DeleteKey(prefsKey);
+                SDKController.Instance.SDK.DeleteKey(prefsKey);
                 Log.Debug($"Deleted save key: {key}");
             }
         }
 
         public static void DeleteAll() {
-            PlayerPrefs.DeleteAll();
+            SDKController.Instance.SDK.DeleteAll();
+            SDKController.Instance.SDK.Save();
             Log.Warning("Saves data has been deleted");
         }
 
@@ -114,46 +113,6 @@ namespace Helpers {
 
             // Use constructor that accepts the value
             var instance = Activator.CreateInstance(objectType, val);
-            return instance;
-        }
-    }
-    
-    public class OwnedObservableConverter : JsonConverter {
-        public override bool CanConvert(Type objectType) {
-            // Check if type is generic and is OwnedObservable<,>
-            return objectType.IsGenericType && objectType.GetGenericTypeDefinition() == typeof(OwnedObservable<,>);
-        }
-
-        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer) {
-            if (value == null) {
-                writer.WriteNull();
-                return;
-            }
-
-            // Call Value() method to get the inner value
-            var method = value.GetType().GetMethod("Value");
-            var innerValue = method.Invoke(value, null);
-            serializer.Serialize(writer, innerValue);
-        }
-
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer) {
-            // Get the generic type parameters: TOwner and T
-            var typeArgs = objectType.GetGenericArguments();
-            var ownerType = typeArgs[0];
-            var valueType = typeArgs[1];
-
-            // Deserialize the inner value
-            var innerValue = serializer.Deserialize(reader, valueType);
-
-            // NOTE: We cannot create an instance without the owner
-            // So we require that existingValue is the owner or pass it separately
-            if (existingValue == null)
-            {
-                throw new JsonSerializationException($"Cannot create OwnedObservable<{ownerType.Name},{valueType.Name}> without owner instance.");
-            }
-
-            // Construct new OwnedObservable with owner and value
-            var instance = Activator.CreateInstance(objectType, existingValue, innerValue);
             return instance;
         }
     }

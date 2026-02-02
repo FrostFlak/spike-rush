@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Alchemy.Serialization;
 using DG.Tweening;
 using Helpers;
@@ -54,6 +55,9 @@ namespace Game {
         public void Deinitialize() {
             _hud.Deinitialize();
             
+            if (_shredderData == null)
+                return;
+                
             Main.Instance.StateManager.State.OnUpdate -= OnGameStateChange;
             _shredderData.PowerData.Level.OnUpdate -= OnPowerLevelChange;
         }
@@ -70,6 +74,12 @@ namespace Game {
             _rigidbody.rotation = Quaternion.identity;
             _rigidbody.position = position;
         }
+        
+        private void ResetAttributes() {
+            _shredderData.AccelerationData.ResetUpgrade();
+            _shredderData.PowerData.ResetUpgrade();
+            _shredderData.FuelData.ResetUpgrade();
+        }
         #endregion
 
         #region Behaviour
@@ -81,6 +91,9 @@ namespace Game {
                 _hud.UpdateSpeedUI(Mathf.RoundToInt(_rigidbody.linearVelocity.magnitude * 3.6f));
             }
 
+            if (Main.Instance.LevelManager.ActiveLevel == null)
+                return;
+            
             Main.Instance.CurrentTraversedDistance = Mathf.RoundToInt(Vector3.Distance(transform.position, Main.Instance.LevelManager.ActiveLevel.StartTransform.position));
             _hud.UpdateDistanceLabel();
             _hud.UpdateLvlProgressBar();
@@ -99,7 +112,7 @@ namespace Game {
             HandleFuel();
 
             var speed = _rigidbody.linearVelocity.magnitude;
-            _source.volume = Mathf.Clamp(speed / effectiveMaxSpeed, 0f, .35f);
+            _source.volume = Mathf.Clamp(speed / effectiveMaxSpeed, 0f, .4f);
             _source.pitch = Mathf.Lerp(0.9f, 1.12f, speed / effectiveMaxSpeed);
         }
         #endregion
@@ -197,6 +210,13 @@ namespace Game {
 
         #region Spikes
         private void SetSpikes(int lvl) {
+            if (lvl == 1) {
+                foreach (var spike in _spikeVisuals.Where(k => k.Key != 1)) 
+                    spike.Value.SetActive(false);
+                
+                return;
+            }
+            
             for (int i = 1; i <= lvl; i++) {
                 if (!_spikeVisuals.TryGetValue(i, out var value))
                     continue;
@@ -219,8 +239,10 @@ namespace Game {
                     SetShredderState(false);
                     
                     Main.Instance.RunReceivedCoins += Constants.GetCoinsByDistance(Main.Instance.CurrentTraversedDistance, levelDistance, totalUpgradesLvl);
-                    if (state is StateManager.GameState.Win)
+                    if (state is StateManager.GameState.Win) {
                         Main.Instance.RunReceivedDiamonds += 10;
+                        ResetAttributes();
+                    }
                     break;
                 
                 case StateManager.GameState.Playing:
@@ -228,7 +250,7 @@ namespace Game {
                     break;
             }
         }
-        
+
         private void OnPowerLevelChange(int arg1, int lvl) => SetSpikes(lvl);
         #endregion
     }

@@ -47,6 +47,9 @@ namespace UI {
             
             Main.Instance.CurrencyData.Coins.OnUpdate -= OnCoinsChange;
             
+            if (_upgradeData == null)
+                return;
+            
             _upgradeData.Level.OnUpdate -= OnLvlChange;
             _upgradeData.InvestedStep.OnUpdate -= OnInvestedStepChange;
         }

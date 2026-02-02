@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Alchemy.Inspector;
 using Alchemy.Serialization;
 using Helpers;
+using Helpers.SDK;
 using UI;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace Game {
     [AlchemySerialize]
@@ -19,6 +22,7 @@ namespace Game {
         [SerializeField] private CurrencyUI _currencyUI;
         [SerializeField] private SettingsUI _settingsUI;
         [SerializeField] private EndUI _endUI;
+        [field: SerializeField] public GameObject SoonUI { get; set; }
         [Header("Storage")]
         [AlchemySerializeField, NonSerialized] public Dictionary<Models.CurrencyType, Sprite> CurrencyIcons;
         [AlchemySerializeField, NonSerialized] public Dictionary<int, LevelData> PredifinedLevelsPb;
@@ -33,7 +37,7 @@ namespace Game {
         public StateManager StateManager { get; private set; }
         public LevelManager LevelManager  { get; private set; }
         
-        public int CurrentLevelID { get; set; }
+        public Observable<int> CurrentLevelID { get; set; }
         public Models.Currency CurrencyData { get; private set; }
         public List<Models.Level> LevelsData { get; private set; }
         
@@ -47,20 +51,30 @@ namespace Game {
         protected override void Awake() {
             base.Awake();
 
+            SDKController.Instance.SDK.StartGame();
             StateManager = new StateManager();
-                
+
+            Application.targetFrameRate = 60; // Will be overridden by settings
             Load();
             Initialize();
+
+            if (CurrentLevelID.Value() > PredifinedLevelsPb.Count) {
+                SoonUI.SetActive(true);
+                return;
+            }
+
+            CurrentLevelID.OnUpdate += OnCurrentLvlIdChange;
             StateManager.State.OnUpdate += OnGameStateChange;
             CurrencyData.Coins.OnUpdate += OnCoinsChange;
             CurrencyData.Diamonds.OnUpdate += OnDiamondsChange;
         }
-        
+
         protected override void OnDisable() {
             base.OnDisable();
 
-            Save();
+            SDKController.Instance.SDK.StopGame();
             Deinitialize();
+            CurrentLevelID.OnUpdate -= OnCurrentLvlIdChange;
             StateManager.State.OnUpdate -= OnGameStateChange;
             CurrencyData.Coins.OnUpdate -= OnCoinsChange;
             CurrencyData.Diamonds.OnUpdate -= OnDiamondsChange;
@@ -68,7 +82,8 @@ namespace Game {
 
         private void Initialize() {
             LevelManager = new LevelManager();
-            LastRecordDistance = new Observable<int>(LevelsData[CurrentLevelID - 1].RecordDistance.Value());
+            var lvl = LevelsData.FirstOrDefault(l => l.ID == CurrentLevelID.Value());
+            LastRecordDistance = new Observable<int>(lvl != null ? lvl.RecordDistance.Value() : 0);
             
             Shredder.Initialize(_shredderData);
             _tapToPlayUI.Initialize();
@@ -76,6 +91,12 @@ namespace Game {
             _currencyUI.Initialize();
             _settingsUI.Initialize(_settingsData);
             _endUI.Initialize();
+        }
+
+        public void ResetProgress() {
+            SavingSystem.DeleteAll();
+            Destroy(gameObject);
+            SceneManager.LoadScene(0);
         }
         
         private void Deinitialize() {
@@ -96,16 +117,19 @@ namespace Game {
                 FuelData = new Models.UpgradeData {
                     Level = new Observable<int>(1),
                     Power = Constants.DefaultFuel,
+                    DefaultValue = Constants.DefaultFuel,
                     InvestedStep = new Observable<int>(0),
                 },
                 AccelerationData = new Models.UpgradeData {
                     Level = new Observable<int>(1),
                     Power = Constants.DefaultAcceleration,
+                    DefaultValue = Constants.DefaultAcceleration,
                     InvestedStep = new Observable<int>(0),
                 },
                 PowerData = new Models.UpgradeData {
                     Level = new Observable<int>(1),
                     Power = Constants.DefaultPower,
+                    DefaultValue = Constants.DefaultPower,
                     InvestedStep = new Observable<int>(0),
                 },
             };
@@ -121,12 +145,23 @@ namespace Game {
             foreach (var predifinedLvl in PredifinedLevelsPb) {
                 var lvlData = new Models.Level();
                 lvlData.ID = predifinedLvl.Key;
-                lvlData.IsReached = new OwnedObservable<Models.Level, bool>(lvlData, false);
+                lvlData.IsReached = new Observable<bool>(false);
                 lvlData.RecordDistance = new Observable<int>(0);
                 defaultLevels.Add(lvlData);
             }
             LevelsData = SavingSystem.GetOrCreate(Constants.LevelsSaveKey, defaultLevels);
-            CurrentLevelID = SavingSystem.GetOrCreate(Constants.CurrentLvlIDSaveKey, 1);
+            foreach (var predefined in PredifinedLevelsPb) {
+                if (LevelsData.All(l => l.ID != predefined.Key)) {
+                    LevelsData.Add(new Models.Level {
+                        ID = predefined.Key,
+                        IsReached = new Observable<bool>(false),
+                        RecordDistance = new Observable<int>(0)
+                    });
+                }
+            }
+            
+            var defaultLevelID = new Observable<int>(1);
+            CurrentLevelID = SavingSystem.GetOrCreate(Constants.CurrentLvlIDSaveKey, defaultLevelID);
 
             var defaultSettings = new Models.Settings {
                 SfxActive = new Observable<bool>(true),
@@ -157,6 +192,13 @@ namespace Game {
             }
         }
         
+        private void OnCurrentLvlIdChange(int arg1, int arg2) {
+            if (CurrentLevelID.Value() <= PredifinedLevelsPb.Count)
+                return;
+            
+            SoonUI.SetActive(true);
+        }
+        
         private void OnCoinsChange(int arg1, int arg2) => Save();
 
         private void OnDiamondsChange(int arg1, int arg2) => Save();
@@ -170,6 +212,9 @@ namespace Game {
         
         [Button]
         private void GiveDiamonds(int amount) => CurrencyData.Add(Models.CurrencyType.Diamond, amount);
+
+        [Button]
+        private void ReachCurrentLvl() => StateManager.FinishLvl();
         #endregion
     }
 }

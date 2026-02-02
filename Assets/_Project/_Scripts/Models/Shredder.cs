@@ -13,6 +13,7 @@ namespace Models {
         public Observable<int> Level;
         public Observable<int> InvestedStep;
         public float Power;
+        public float DefaultValue;
         
         public void Upgrade(float powerStep) {
             InvestedStep.Set(Mathf.Clamp(InvestedStep.Value() + 1, 0, Constants.StepsToNewLevel));
@@ -21,6 +22,12 @@ namespace Models {
 
             Power += powerStep;
             Level.Set(Level.Value() + 1);
+            InvestedStep.Set(0);
+        }
+
+        public void ResetUpgrade() {
+            Power = DefaultValue;
+            Level.Set(1);
             InvestedStep.Set(0);
         }
     }

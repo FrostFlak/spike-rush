@@ -10,6 +10,7 @@ namespace UI {
 
         #region SerializedFields
         [Header("Components")]
+        [SerializeField] private ResetProgressUI _resetProgressUI;
         [SerializeField] private AudioMixer _audioMixer;
         [Header("Rect")]
         [SerializeField] private RectTransform _settingsPanel;
@@ -17,10 +18,11 @@ namespace UI {
         [SerializeField] private List<Button> _closePanelBtn;
         [SerializeField] private Button _settingsBtn;
         [SerializeField] private Button _restartLvlBtn;
+        [SerializeField] private Button _resetProgressBtn;
         [Header("Toggle")]
-        [SerializeField] private Toggle _sfxToggle;
-        [SerializeField] private Toggle _musicToggle;
-        [SerializeField] private Toggle _highFpsToggle;
+        [SerializeField] private Switch _sfxSwitch;
+        [SerializeField] private Switch _musicSwitch;
+        [SerializeField] private Switch _highFpsSwitch;
         #endregion
 
         #region PrivateFields
@@ -31,45 +33,32 @@ namespace UI {
         public void Initialize(Models.Settings settingsData) {
             _settingsData = settingsData;
 
-            _settingsData.SfxActive.OnUpdate += OnSettingsToggleChange;
-            _settingsData.MusicActive.OnUpdate += OnSettingsToggleChange;
-            _settingsData.HighFpsActive.OnUpdate += OnSettingsToggleChange;
-            
             Main.Instance.StateManager.State.OnUpdate += OnGameStateChange;
             
+            _closePanelBtn.ForEach(b => b.onClick.AddListener(() => SetSettingsPanelState(false)));
             _settingsBtn.onClick.AddListener(() => SetSettingsPanelState(true));
             _restartLvlBtn.onClick.AddListener(StopLevel);
-            _closePanelBtn.ForEach(b => b.onClick.AddListener(() => SetSettingsPanelState(false)));
+            _resetProgressBtn.onClick.AddListener(OnClickResetProgress);
             
-            _sfxToggle.onValueChanged.AddListener(OnSfxToggleValueChanged);
-            _musicToggle.onValueChanged.AddListener(OnMusicToggleValueChanged);
-            _highFpsToggle.onValueChanged.AddListener(OnLowFpsToggleValueChanged);
-            SetTogglesState();
+            _sfxSwitch.SetActive(_settingsData.SfxActive.Value(), false);
+            _musicSwitch.SetActive(_settingsData.MusicActive.Value(), false);
+            _highFpsSwitch.SetActive(_settingsData.HighFpsActive.Value(), false);
+
+            _sfxSwitch.AddListener(OnSfxToggleValueChanged);
+            _musicSwitch.AddListener(OnMusicToggleValueChanged);
+            _highFpsSwitch.AddListener(OnLowFpsToggleValueChanged);
         }
 
-        private void SetTogglesState() {
-            _sfxToggle.isOn = _settingsData.SfxActive.Value();
-            _musicToggle.isOn = _settingsData.MusicActive.Value();
-            _highFpsToggle.isOn = _settingsData.HighFpsActive.Value();
-
-            _audioMixer.SetFloat("SFX", _settingsData.SfxActive.Value() ? 0 : -80);
-            _audioMixer.SetFloat("Music", _settingsData.MusicActive.Value() ? 0 : -80);
-            Application.targetFrameRate = _settingsData.HighFpsActive.Value() ? 60 : 30;
-        }
-        
         public void Deinitialize() {
-            _settingsData.SfxActive.OnUpdate -= OnSettingsToggleChange;
-            _settingsData.MusicActive.OnUpdate -= OnSettingsToggleChange;
-            _settingsData.HighFpsActive.OnUpdate -= OnSettingsToggleChange;
-            
             Main.Instance.StateManager.State.OnUpdate -= OnGameStateChange;
             
+            _closePanelBtn.ForEach(b => b.onClick.RemoveAllListeners());
             _settingsBtn.onClick.RemoveAllListeners();
             _restartLvlBtn.onClick.RemoveAllListeners();
-            _closePanelBtn.ForEach(b => b.onClick.RemoveAllListeners());
-            _sfxToggle.onValueChanged.RemoveAllListeners();
-            _musicToggle.onValueChanged.RemoveAllListeners();
-            _highFpsToggle.onValueChanged.RemoveAllListeners();
+            _resetProgressBtn.onClick.RemoveAllListeners();
+            _sfxSwitch.RemoveAllListeners();
+            _musicSwitch.RemoveAllListeners();
+            _highFpsSwitch.RemoveAllListeners();
         }
         #endregion
 
@@ -98,21 +87,36 @@ namespace UI {
             
             AudioController.Instance.PlayUI(AudioController.UISFX.PopClick, true);
         }
+        
+        private void OnClickResetProgress() => _resetProgressUI.gameObject.SetActive(true);
         #endregion
 
         #region Events
-        private void OnSettingsToggleChange(bool arg1, bool arg2) {
-            SetTogglesState();
-            AudioController.Instance?.PlayUI(AudioController.UISFX.Switch, true);
-        }
-
         private void OnGameStateChange(StateManager.GameState _, StateManager.GameState state) => _restartLvlBtn.gameObject.SetActive(state is StateManager.GameState.Playing);
         
-        private void OnSfxToggleValueChanged(bool active) => _settingsData.SfxActive.Set(active);
+        private void OnSfxToggleValueChanged(bool active) {
+            _settingsData.SfxActive.Set(active);
+            
+            _audioMixer.SetFloat("SFX", _settingsData.SfxActive.Value() ? 0 : -80);
+            if (_settingsPanel.gameObject.activeInHierarchy)
+                AudioController.Instance?.PlayUI(AudioController.UISFX.Switch, true);
+        }
 
-        private void OnMusicToggleValueChanged(bool active) => _settingsData.MusicActive.Set(active);
+        private void OnMusicToggleValueChanged(bool active) {
+            _settingsData.MusicActive.Set(active);
+            
+            _audioMixer.SetFloat("Music", _settingsData.MusicActive.Value() ? 0 : -80);
+            if (_settingsPanel.gameObject.activeInHierarchy)
+                AudioController.Instance?.PlayUI(AudioController.UISFX.Switch, true);
+        }
 
-        private void OnLowFpsToggleValueChanged(bool active) => _settingsData.HighFpsActive.Set(active);
+        private void OnLowFpsToggleValueChanged(bool active) {
+            _settingsData.HighFpsActive.Set(active);
+            
+            Application.targetFrameRate = _settingsData.HighFpsActive.Value() ? 60 : 30;
+            if (_settingsPanel.gameObject.activeInHierarchy)
+                AudioController.Instance?.PlayUI(AudioController.UISFX.Switch, true);
+        }
         #endregion
     }
 }

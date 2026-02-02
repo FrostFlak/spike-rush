@@ -110,9 +110,11 @@ namespace UI {
             
             _coinsLabel.LerpLabelCount(0, Main.Instance.RunReceivedCoins, duration: 1f, onComplete: () => _coinsLabel.SetText($"+{_coinsLabel.text}"));
             AudioController.Instance.PlayUI(AudioController.UISFX.MultipleCoins);
-            
-            if (Main.Instance.RunReceivedDiamonds <= 0) 
+
+            if (Main.Instance.RunReceivedDiamonds <= 0) {
+                _diamondsLabel.gameObject.SetActive(false);
                 return;
+            }
             
             _diamondsLabel.gameObject.SetActive(true);
             _diamondsLabel.LerpLabelCount(0, Main.Instance.RunReceivedDiamonds, duration: 1f, onComplete: () => _diamondsLabel.SetText($"+{_diamondsLabel.text}"));
