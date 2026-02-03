@@ -240,7 +240,9 @@ namespace Game {
                     
                     Main.Instance.RunReceivedCoins += Constants.GetCoinsByDistance(Main.Instance.CurrentTraversedDistance, levelDistance, totalUpgradesLvl);
                     if (state is StateManager.GameState.Win) {
+                        Main.Instance.RunReceivedCoins = 0;
                         Main.Instance.RunReceivedDiamonds += 10;
+                        Main.Instance.CurrencyData.Coins.Set(0);
                         ResetAttributes();
                     }
                     break;

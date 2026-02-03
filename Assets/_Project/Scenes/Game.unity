@@ -131,7 +131,7 @@ GameObject:
   - component: {fileID: 39077224}
   - component: {fileID: 39077223}
   - component: {fileID: 39077227}
-  - component: {fileID: 39077226}
+  - component: {fileID: 39077228}
   m_Layer: 0
   m_Name: WaterPlane
   m_TagString: Untagged
@@ -200,25 +200,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 39077220}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.013089582, y: 0, z: 0, w: 0.99991435}
-  m_LocalPosition: {x: 0, y: -5, z: 100}
-  m_LocalScale: {x: 100, y: 1, z: 70}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: -10, z: 100}
+  m_LocalScale: {x: 300, y: 1, z: 400}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: -1.5, y: 0, z: 0}
---- !u!114 &39077226
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 39077220}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c3b33a487986ede4d8ab9ad83505aaea, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!65 &39077227
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -240,6 +228,18 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 10, y: 2.1235087, z: 10}
   m_Center: {x: 0, y: -0.8708219, z: 5.501927e-11}
+--- !u!114 &39077228
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 39077220}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c3b33a487986ede4d8ab9ad83505aaea, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &65072375
 GameObject:
   m_ObjectHideFlags: 0
@@ -1203,7 +1203,7 @@ Canvas:
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 1
   m_TargetDisplay: 0
 --- !u!224 &1842983140
 RectTransform:
@@ -1661,18 +1661,6 @@ PrefabInstance:
     - target: {fileID: 7506118487655323947, guid: 4e8c897e7c2a87a4a91afa2f62658e3d, type: 3}
       propertyPath: m_Name
       value: Shredder
-      objectReference: {fileID: 0}
-    - target: {fileID: 7644933453208493841, guid: 4e8c897e7c2a87a4a91afa2f62658e3d, type: 3}
-      propertyPath: Priority
-      value: 165
-      objectReference: {fileID: 0}
-    - target: {fileID: 7644933453208493841, guid: 4e8c897e7c2a87a4a91afa2f62658e3d, type: 3}
-      propertyPath: m_Resource
-      value: 
-      objectReference: {fileID: 8300000, guid: b04b909d452d4a94eac9568df8c0e03c, type: 3}
-    - target: {fileID: 8527670896919461561, guid: 4e8c897e7c2a87a4a91afa2f62658e3d, type: 3}
-      propertyPath: m_FillAmount
-      value: 0.071
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

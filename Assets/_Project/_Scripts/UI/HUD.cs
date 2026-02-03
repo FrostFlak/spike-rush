@@ -12,6 +12,7 @@ namespace UI {
         [Header("RectTransforms")]
         [SerializeField] private RectTransform _gameRect;
         [SerializeField] private RectTransform _levelRect;
+        [SerializeField] private Joystick _joystick;
         [Header("UI")]
         [Header("Shredder")]
         [SerializeField] private TMP_Text _speedLabel;
@@ -42,6 +43,7 @@ namespace UI {
             
             SetLevelLabel();
             _lowFuelWarnLabel.alpha = 0f;
+            _joystick.gameObject.SetActive(false);
         }
 
         public void Deinitialize() {
@@ -134,11 +136,14 @@ namespace UI {
             if (state is StateManager.GameState.Playing) {
                 SetHUDRectState(true);
                 SetLvlPanelState(true);
+                _joystick.gameObject.SetActive(true);
             }
             else if (state is StateManager.GameState.GatheredReward) {
                 SetHUDRectState(false);
                 SetLvlPanelState(false);
                 SetLevelLabel();
+                _joystick.gameObject.SetActive(false);
+                _lowFuelWarnLabel.alpha = 0f;
             }
         }
         #endregion

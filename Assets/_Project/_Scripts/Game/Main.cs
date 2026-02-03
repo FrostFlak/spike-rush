@@ -51,13 +51,13 @@ namespace Game {
         protected override void Awake() {
             base.Awake();
 
-            SDKController.Instance.SDK.StartGame();
             StateManager = new StateManager();
-
             Application.targetFrameRate = 60; // Will be overridden by settings
             Load();
             Initialize();
 
+            SDKController.Instance.SDK.StartGame();
+            
             if (CurrentLevelID.Value() > PredifinedLevelsPb.Count) {
                 SoonUI.SetActive(true);
                 return;

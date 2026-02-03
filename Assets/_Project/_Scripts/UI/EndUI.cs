@@ -38,6 +38,8 @@ namespace UI {
             
             _xButton.onClick.AddListener(OnClickTakeWithMultiplier);
             _takeBtn.onClick.AddListener(OnClickTake);
+            
+            _coinsLabel.gameObject.SetActive(false);
             _diamondsLabel.gameObject.SetActive(false);
             _newRecordLabel.alpha = 0f;
         }
@@ -107,17 +109,24 @@ namespace UI {
                 _outOfFuelLabel.gameObject.SetActive(true);
                 _levelReachedLabel.gameObject.SetActive(false);
             }
-            
-            _coinsLabel.LerpLabelCount(0, Main.Instance.RunReceivedCoins, duration: 1f, onComplete: () => _coinsLabel.SetText($"+{_coinsLabel.text}"));
-            AudioController.Instance.PlayUI(AudioController.UISFX.MultipleCoins);
+
+            if (Main.Instance.RunReceivedCoins <= 0) {
+                _coinsLabel.gameObject.SetActive(false);
+            }
+            else {
+                _coinsLabel.gameObject.SetActive(true);
+                _coinsLabel.LerpLabelCount(0, Main.Instance.RunReceivedCoins, duration: 1f, onComplete: () => _coinsLabel.SetText($"+{_coinsLabel.text}"));
+            }
 
             if (Main.Instance.RunReceivedDiamonds <= 0) {
                 _diamondsLabel.gameObject.SetActive(false);
-                return;
+            }
+            else {
+                _diamondsLabel.gameObject.SetActive(true);
+                _diamondsLabel.LerpLabelCount(0, Main.Instance.RunReceivedDiamonds, duration: 1f, onComplete: () => _diamondsLabel.SetText($"+{_diamondsLabel.text}"));
             }
             
-            _diamondsLabel.gameObject.SetActive(true);
-            _diamondsLabel.LerpLabelCount(0, Main.Instance.RunReceivedDiamonds, duration: 1f, onComplete: () => _diamondsLabel.SetText($"+{_diamondsLabel.text}"));
+            AudioController.Instance.PlayUI(AudioController.UISFX.MultipleCoins);
         }
         #endregion
 

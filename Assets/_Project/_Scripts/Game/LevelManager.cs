@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using Helpers.SDK;
 using Unity.Logging;
 using UnityEngine;
 
@@ -33,6 +34,8 @@ namespace Game {
                 var lvl = Main.Instance.LevelsData.FirstOrDefault(l => l.ID == Main.Instance.CurrentLevelID.Value());
                 lvl?.IsReached.Set(true);
                 Main.Instance.CurrentLevelID.Set(Main.Instance.CurrentLevelID.Value() + 1);
+                
+                SDKController.Instance.SDK.HappyTime();
 
                 SpawnLevel();
             }

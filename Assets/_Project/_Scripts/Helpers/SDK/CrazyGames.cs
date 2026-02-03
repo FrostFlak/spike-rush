@@ -33,6 +33,11 @@ namespace Helpers.SDK {
             CrazySDK.Game.GameplayStop();
             Log.Debug("Crazy games SDK gameplay stopped");
         }
+
+        public override void HappyTime() {
+            CrazySDK.Game.HappyTime();
+            Log.Debug("Crazy games SDK happy time");
+        }
         #endregion
 
         #region Prefs

@@ -16,6 +16,8 @@ namespace Helpers {
         #endregion
         
         #region MonoBehaviour
+        private void Awake() => gameObject.SetActive(Debug.isDebugBuild || Application.isEditor);
+
         private void Update() => DisplayFps();
         #endregion
         
