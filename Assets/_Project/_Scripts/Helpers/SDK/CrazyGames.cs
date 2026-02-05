@@ -23,13 +23,13 @@ namespace Helpers.SDK {
         #endregion
 
         #region Game
-        public override void StartGame() {
+        public override void StartGameplay() {
             CrazySDK.Game.GameplayStart();
             CrazySDK.Game.HideInviteButton();
             Log.Debug("Crazy games SDK gameplay started");
         }
         
-        public override void StopGame() {
+        public override void StopGameplay() {
             CrazySDK.Game.GameplayStop();
             Log.Debug("Crazy games SDK gameplay stopped");
         }

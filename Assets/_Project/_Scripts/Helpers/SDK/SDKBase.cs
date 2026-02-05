@@ -13,8 +13,8 @@ namespace Helpers.SDK {
         #endregion
 
         #region Game
-        public abstract void StartGame();
-        public abstract void StopGame();
+        public abstract void StartGameplay();
+        public abstract void StopGameplay();
 
         public virtual void HappyTime() { }
         #endregion

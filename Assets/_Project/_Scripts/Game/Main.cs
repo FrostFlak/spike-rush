@@ -55,8 +55,6 @@ namespace Game {
             Application.targetFrameRate = 60; // Will be overridden by settings
             Load();
             Initialize();
-
-            SDKController.Instance.SDK.StartGame();
             
             if (CurrentLevelID.Value() > PredifinedLevelsPb.Count) {
                 SoonUI.SetActive(true);
@@ -72,7 +70,6 @@ namespace Game {
         protected override void OnDisable() {
             base.OnDisable();
 
-            SDKController.Instance.SDK.StopGame();
             Deinitialize();
             CurrentLevelID.OnUpdate -= OnCurrentLvlIdChange;
             StateManager.State.OnUpdate -= OnGameStateChange;
@@ -181,14 +178,22 @@ namespace Game {
         #endregion
         
         private void OnGameStateChange(StateManager.GameState arg1, StateManager.GameState state) {
-            if (state is StateManager.GameState.Win or StateManager.GameState.Lose) {
-                if (LastRecordDistance.Value() >= CurrentTraversedDistance)
-                    return;
+            switch (state) {
+                case StateManager.GameState.Win or StateManager.GameState.Lose:
+                    SDKController.Instance.SDK.StopGameplay();
+                    if (LastRecordDistance.Value() >= CurrentTraversedDistance)
+                        return;
+                    
+                    LastRecordDistance.Set(CurrentTraversedDistance);
+                    break;
                 
-                LastRecordDistance.Set(CurrentTraversedDistance);
-            }
-            else if (state is StateManager.GameState.GatheredReward) {
-                Save();
+                case StateManager.GameState.GatheredReward:
+                    Save();
+                    break;
+                
+                case StateManager.GameState.Playing:
+                    SDKController.Instance.SDK.StartGameplay();
+                    break;
             }
         }
         
