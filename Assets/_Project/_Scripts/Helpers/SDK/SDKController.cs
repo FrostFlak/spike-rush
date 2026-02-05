@@ -12,9 +12,11 @@ namespace Helpers.SDK {
             base.Awake();
             
             #if CRAZY_GAMES
-            SDK = new CrazyGames(onInitialized: OnSDKInitialized);
+            SDK = new CrazyGamesSDK(onInitialized: OnSDKInitialized);
             #elif ANDROID
             SDK = new AndroidSDK(onInitialized: OnSDKInitialized);
+            #elif ITCH
+            SDK = new ItchSDK(onInitialized: OnSDKInitialized);
             #endif
         }
         #endregion

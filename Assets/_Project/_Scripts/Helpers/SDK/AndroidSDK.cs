@@ -7,11 +7,7 @@ namespace Helpers.SDK {
             onInitialized?.Invoke();
         }
 
-        public override void StartGameplay() {
-            Log.Debug("Start Game for Android SDK");
-        }
-        public override void StopGameplay() {
-            Log.Debug("Stop Game for Android SDK");
-        }
+        public override void StartGameplay() => Log.Debug("Start Game for Android SDK");
+        public override void StopGameplay() => Log.Debug("Stop Game for Android SDK");
     }
 }

@@ -22,23 +22,18 @@ namespace Helpers {
         }
 
         public static void Save<T>(T data, string key) {
-            if (data == null)
-            {
+            if (data == null) {
                 Log.Warning($"Trying to save null data for key: {key}");
                 return;
             }
 
-            try
-            {
+            try {
                 string json = JsonConvert.SerializeObject(data);
                 string prefsKey = PREFS_PREFIX + key;
 
                 SDKController.Instance.SDK.SetString(prefsKey, json);
 
-                // Optional: very verbose logging for debug builds
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
                 Log.Debug($"Saved [{key}] ({json.Length} chars)");
-#endif
             }
             catch (Exception ex) {
                 Log.Error($"Failed to save '{key}': {ex.Message}");
@@ -66,8 +61,7 @@ namespace Helpers {
 
         public static void Delete(string key) {
             string prefsKey = PREFS_PREFIX + key;
-            if (SDKController.Instance.SDK.HasKey(prefsKey))
-            {
+            if (SDKController.Instance.SDK.HasKey(prefsKey)) {
                 SDKController.Instance.SDK.DeleteKey(prefsKey);
                 Log.Debug($"Deleted save key: {key}");
             }
@@ -79,11 +73,7 @@ namespace Helpers {
             Log.Warning("Saves data has been deleted");
         }
 
-        /// <summary>
-        /// Creates default value if no save exists
-        /// </summary>
-        public static T GetOrCreate<T>(string key, T defaultValue = default)
-        {
+        public static T GetOrCreate<T>(string key, T defaultValue = default) {
             if (Exists(key))
                 return Load(key, defaultValue);
 

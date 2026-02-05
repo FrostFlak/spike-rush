@@ -1,16 +1,16 @@
 {
-    "name": "CrazyGamesDefineManager",
-    "rootNamespace": "CrazyGames",
+    "name": "CrazyAssembly",
+    "rootNamespace": "",
     "references": [],
-    "includePlatforms": [
-        "Editor"
-    ],
+    "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,
     "precompiledReferences": [],
     "autoReferenced": true,
-    "defineConstraints": [],
+    "defineConstraints": [
+        "CRAZY_GAMES"
+    ],
     "versionDefines": [],
     "noEngineReferences": false
 }
